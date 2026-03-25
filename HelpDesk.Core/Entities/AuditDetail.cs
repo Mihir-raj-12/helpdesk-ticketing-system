@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HelpDesk.Core.Entities
 {
-    public class AuditDetail
+    public class AuditDetail : BaseEntity
     {
         public string FieldName { get; set; } = string.Empty;
         public string? OldValue { get; set; }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace HelpDesk.Core.Entities
 {
-    public class AuditLog
+    public class AuditLog : BaseEntity
     {
         public string TableName { get; set; } = string.Empty;
         public string Action { get; set; } = string.Empty;
