@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace HelpDesk.Core.Entities
 {
-    internal class Category
+    public class Category : BaseEntity
     {
+        public string Name { get; set; }  = string.Empty;
+        public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
+
     }
 }

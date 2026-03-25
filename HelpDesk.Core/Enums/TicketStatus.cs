@@ -6,7 +6,14 @@ using System.Threading.Tasks;
 
 namespace HelpDesk.Core.Enums
 {
-    internal class Class1
+    public enum TicketStatus
     {
+        Open = 1,
+        InProgress = 2,
+        OnHold = 3,
+        Resolved = 4,
+        Closed = 5,
+        Reopened = 6
+
     }
 }

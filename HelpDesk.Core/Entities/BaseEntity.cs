@@ -6,7 +6,14 @@ using System.Threading.Tasks;
 
 namespace HelpDesk.Core.Entities
 {
-    internal class BaseEntity
+    public abstract class BaseEntity
     {
+        public int Id { get; set; }
+        public DateTime CreatedDate { get; set; } 
+
+        public DateTime LastUpdatedDate { get; set; }
+
+        public bool isActive { get; set; } = true;
+
     }
 }

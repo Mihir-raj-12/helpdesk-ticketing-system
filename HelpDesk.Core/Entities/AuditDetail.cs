@@ -6,7 +6,16 @@ using System.Threading.Tasks;
 
 namespace HelpDesk.Core.Entities
 {
-    internal class AuditDetail
+    public class AuditDetail
     {
+        public string FieldName { get; set; } = string.Empty;
+        public string? OldValue { get; set; }
+        public string? NewValue { get; set; }
+
+        // Foreign Key
+        public int AuditLogId { get; set; }
+
+        // Navigation Property
+        public AuditLog AuditLog { get; set; } = null!;
     }
 }
