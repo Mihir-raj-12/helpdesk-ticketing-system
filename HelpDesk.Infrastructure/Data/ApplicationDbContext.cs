@@ -44,7 +44,7 @@ namespace HelpDesk.Infrastructure.Data
             builder.Entity<Ticket>()
                 .HasOne(t => t.AssignedToUser)
                 .WithMany(u => u.AssignedTickets)
-                .HasForeignKey(t => t.AssignedToUserId)
+                .HasForeignKey(t => t.AssignedToUserId )
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Ticket - Category relationship
