@@ -1,11 +1,12 @@
+using HelpDesk.Core.Entities;
+using HelpDesk.Core.Interfaces;
+using HelpDesk.Core.Mappings;
 using HelpDesk.Infrastructure.Data;
+using HelpDesk.Infrastructure.Repositories.Implementations;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using HelpDesk.Core.Entities;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
-using HelpDesk.Core.Interfaces;
-using HelpDesk.Infrastructure.Repositories.Implementations;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +24,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 var app = builder.Build();
 
