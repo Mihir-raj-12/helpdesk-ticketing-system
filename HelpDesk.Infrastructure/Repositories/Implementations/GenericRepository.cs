@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace HelpDesk.Infrastructure.Repositories.Implementations
 {
-    internal class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
+    public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
     {
         protected readonly ApplicationDbContext _context;
         protected readonly DbSet<T> _dbSet;

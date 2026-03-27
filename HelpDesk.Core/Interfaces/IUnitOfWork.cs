@@ -11,13 +11,11 @@ namespace HelpDesk.Core.Interfaces
 {
     public interface IUnitOfWork : IDisposable
     {
-        IGenericRepository<Ticket> Tickets { get; }
+        ITicketRepository Tickets { get; }
+        ICommentRepository Comments { get; }
+        IAuditRepository AuditLogs { get; }
         IGenericRepository<Category> Categories { get; }
-        IGenericRepository<Comment> Comments { get; }
-        IGenericRepository<AuditLog> AuditLogs { get; }
         IGenericRepository<AuditDetail> AuditDetails { get; }
-
-        Task<int> SaveChangesAsync(); 
-
+        Task<int> SaveChangesAsync();
     }
 }

@@ -14,6 +14,25 @@ namespace HelpDesk.Core.Common
 
         public T? Data { get; set; }
 
+        public static ApiResponse<T> Success(T data, string message = "Opration Successful")
+        {
+            return new ApiResponse<T>
+            {
+                IsSuccess = true,
+                Message = message,
+                Data = data
+            };
+        }
+
+        public static ApiResponse<T> Failure(string message)
+        {
+            return new ApiResponse<T>
+            {
+                IsSuccess = false,
+                Message = message,
+                Data = default
+            };
+        }
 
     }
 }
