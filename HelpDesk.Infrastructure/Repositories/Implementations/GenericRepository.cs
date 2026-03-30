@@ -37,7 +37,6 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations
             entity.LastUpdatedDate = DateTime.UtcNow;
             entity.isActive = true;
             await _dbSet.AddAsync(entity);
-            await _context.SaveChangesAsync();
             return entity;
         }
 
@@ -45,7 +44,6 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations
         {
            entity.LastUpdatedDate = DateTime.UtcNow;
             _dbSet.Update(entity);
-            await _context.SaveChangesAsync();
         }
 
         public async Task SoftDeleteAsync(int id)
@@ -55,7 +53,6 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations
             {
                 entity.isActive = false;
                 entity.LastUpdatedDate = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
 
             }
         }
