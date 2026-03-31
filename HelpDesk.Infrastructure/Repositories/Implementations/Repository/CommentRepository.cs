@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HelpDesk.Infrastructure.Repositories.Implementations
+namespace HelpDesk.Infrastructure.Repositories.Implementations.Repository
 {
     public class CommentRepository : GenericRepository<Comment>, ICommentRepository
     {

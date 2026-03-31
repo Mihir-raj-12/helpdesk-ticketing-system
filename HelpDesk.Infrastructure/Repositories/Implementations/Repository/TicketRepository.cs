@@ -9,7 +9,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HelpDesk.Infrastructure.Repositories.Implementations
+namespace HelpDesk.Infrastructure.Repositories.Implementations.Repository
 {
     public class TicketRepository : GenericRepository<Ticket>, ITicketRepository
     {

@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HelpDesk.Infrastructure.Repositories.Implementations
+namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 {
     public class CategoryService : ICategoryService
     {
@@ -60,7 +60,6 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations
             if (category == null)
             {
                 return ApiResponse<bool>.Failure("category Not Found");
-
 
             }
 

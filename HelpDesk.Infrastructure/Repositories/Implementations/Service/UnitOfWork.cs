@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 using HelpDesk.Core.Entities;
 using HelpDesk.Core.Interfaces;
 using HelpDesk.Infrastructure.Data;
+using HelpDesk.Infrastructure.Repositories.Implementations.Repository;
 
-namespace HelpDesk.Infrastructure.Repositories.Implementations
+namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 {
     public class UnitOfWork : IUnitOfWork
     {
