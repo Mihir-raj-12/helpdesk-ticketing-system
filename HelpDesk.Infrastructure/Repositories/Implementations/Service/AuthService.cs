@@ -12,7 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 {
-    internal class AuthService : IAuthService
+    public class AuthService : IAuthService
     {
         private readonly UserManager<ApplicationUser> _userManager; 
         private readonly IConfiguration _configuration;

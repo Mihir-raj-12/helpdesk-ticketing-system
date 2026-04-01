@@ -64,7 +64,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             var responseDto = new List<UserResponseDto>();
             foreach (var user in users)
             {
-                var roles = _userManager.GetRolesAsync(user);
+                var roles =await _userManager.GetRolesAsync(user);
                 var dto = _mapper.Map<UserResponseDto>(user);
                 dto.Role = roles.FirstOrDefault() ?? string.Empty;
                 responseDto.Add(dto);
