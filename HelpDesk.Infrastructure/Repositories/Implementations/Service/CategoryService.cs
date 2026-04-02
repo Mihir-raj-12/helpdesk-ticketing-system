@@ -40,7 +40,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
         }
 
 
-        public async Task<ApiResponse<bool>> UpdateCategoryAsync(int id , CreateCategoryDto dto)
+        public async Task<ApiResponse<bool>> UpdateCategoryAsync(int id , UpdateCategoryDto dto)
         {
             var category = await _unitOfWork.Categories.GetByIdAsync(id);
             if(category == null)

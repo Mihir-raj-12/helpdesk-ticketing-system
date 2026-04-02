@@ -12,7 +12,7 @@ namespace HelpDesk.Core.Interfaces
     {
         Task<ApiResponse<CategoryResponseDto>> CreateCategoryAsync(CreateCategoryDto dto);
         Task<ApiResponse<List<CategoryResponseDto>>> GetAllCategoriesAsync();
-        Task<ApiResponse<bool>> UpdateCategoryAsync(int id, CreateCategoryDto dto);
+        Task<ApiResponse<bool>> UpdateCategoryAsync(int id, UpdateCategoryDto dto);
         Task<ApiResponse<bool>> DeactivateCategoryAsync(int id);
     }
 }
