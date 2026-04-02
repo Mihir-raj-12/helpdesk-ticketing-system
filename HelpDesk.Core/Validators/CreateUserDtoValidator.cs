@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using HelpDesk.Core.DTOs.User;
+using HelpDesk.Core.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +23,8 @@ namespace HelpDesk.Core.Validators
                 .NotEmpty().WithMessage("Password is required.")
                 .MinimumLength(6).WithMessage("Password must be at least 6 characters long.");
             RuleFor(x => x.Role)
-               .IsInEnum().WithMessage("Invalid User Role selected.");
+               .IsEnumName(typeof(UserRole), caseSensitive: false)
+                .WithMessage("Invalid User Role selected.");
         }
     }
 }
