@@ -13,15 +13,18 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
     public class DashboardService : IDashboardService
     {
         private readonly ITicketService _ticketservice;
+        private readonly ICurrentUserProvider _currentUserProvider;
 
-        public DashboardService(ITicketService ticketservice)
+        public DashboardService(ITicketService ticketservice , ICurrentUserProvider currentUserProvider)
         {
             _ticketservice = ticketservice;
+            _currentUserProvider = currentUserProvider;
         }
 
-        public async Task<ApiResponse<DashboardResponseDto>> GetDashboardStatusAsync(string currentUserId , string currentUserRole)
+        public async Task<ApiResponse<DashboardResponseDto>> GetDashboardStatusAsync()
         {
-            var ticketsResponse = await _ticketservice.GetTicketsAsync(currentUserId, currentUserRole);
+
+            var ticketsResponse = await _ticketservice.GetTicketsAsync();
 
             if (!ticketsResponse.IsSuccess || ticketsResponse.Data == null)
             {

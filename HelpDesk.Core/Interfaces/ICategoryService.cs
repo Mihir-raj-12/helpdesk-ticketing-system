@@ -8,11 +8,9 @@ using System.Threading.Tasks;
 
 namespace HelpDesk.Core.Interfaces
 {
-    public interface ICategoryService
+    public interface ICategoryService : IGenericService<CategoryResponseDto>
     {
-        Task<ApiResponse<CategoryResponseDto>> CreateCategoryAsync(CreateCategoryDto dto);
-        Task<ApiResponse<List<CategoryResponseDto>>> GetAllCategoriesAsync();
-        Task<ApiResponse<bool>> UpdateCategoryAsync(int id, UpdateCategoryDto dto);
-        Task<ApiResponse<bool>> DeactivateCategoryAsync(int id);
+        // We only need to define custom methods here (like your specific Update method)
+        Task<ApiResponse<bool>> UpdateCategoryAsync(UpdateCategoryDto dto);
     }
 }

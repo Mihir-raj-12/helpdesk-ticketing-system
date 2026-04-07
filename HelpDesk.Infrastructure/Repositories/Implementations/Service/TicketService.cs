@@ -16,18 +16,23 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
     {
         private readonly IMapper _mapper;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICurrentUserProvider _currentUserProvider;
 
-        public TicketService (IMapper mapper, IUnitOfWork unitOfWork)
+        public TicketService (IMapper mapper, IUnitOfWork unitOfWork , ICurrentUserProvider currentUserProvider)
         {
             _mapper = mapper;
             _unitOfWork = unitOfWork;
+            _currentUserProvider = currentUserProvider;
         }
 
 
         public async Task<ApiResponse<TicketResponseDto>> CreateTicketAsync (
-            CreateTicketDto dto , string currentUserId
+            CreateTicketDto dto
             )
         {
+            var currentUserId = _currentUserProvider.GetCurrentUserId();
+            if (string.IsNullOrEmpty(currentUserId)) return ApiResponse<TicketResponseDto>.Failure("User not found.");
+
             var ticket = _mapper.Map<Ticket>(dto);
             ticket.Status = TicketStatus.Open;
 
@@ -44,9 +49,11 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 
         }
 
-        public async Task<ApiResponse<List<TicketResponseDto>>> GetTicketsAsync(
-           string currentUserId, string currentUserRole)
+        public async Task<ApiResponse<List<TicketResponseDto>>> GetTicketsAsync()
         {
+            var currentUserId = _currentUserProvider.GetCurrentUserId();
+            var currentUserRole = _currentUserProvider.GetCurrentUserRole();
+
             IEnumerable<Ticket> tickets;
 
             if (currentUserRole == "Admin")
@@ -61,8 +68,12 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
         }
 
         public async Task<ApiResponse<TicketResponseDto>> GetTicketByIdAsync(
-            int ticketId, string currentUserId, string currentUserRole)
+            int ticketId)
         {
+
+            var currentUserId = _currentUserProvider.GetCurrentUserId();
+            var currentUserRole = _currentUserProvider.GetCurrentUserRole();
+
             var ticket = await _unitOfWork.Tickets.GetTicketWithDetailsAsync(ticketId);
             if (ticket == null)
                 return ApiResponse<TicketResponseDto>.Failure("Ticket not found");
@@ -82,9 +93,12 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
         }
 
         public async Task<ApiResponse<bool>> UpdateTicketStatusAsync(
-            int ticketId, UpdateTicketStatusDto dto, string currentUserId)
+            UpdateTicketStatusDto dto)
         {
-            var ticket = await _unitOfWork.Tickets.GetByIdAsync(ticketId);
+            var currentUserId = _currentUserProvider.GetCurrentUserId();
+            if (string.IsNullOrEmpty(currentUserId)) return ApiResponse<bool>.Failure("User not found.");
+
+            var ticket = await _unitOfWork.Tickets.GetByIdAsync(dto.TicketId);
             if (ticket == null)
                 return ApiResponse<bool>.Failure("Ticket not found");
 
@@ -99,7 +113,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             var oldStatus = ticket.Status.ToString();
             ticket.Status = newStatus;
 
-            await _unitOfWork.Tickets.UpdateAsync(ticket);
+            await _unitOfWork.Tickets.UpdateAsync(ticket, t => t.Status);
 
             // Audit log
             await _unitOfWork.AuditLogs.LogAsync(
@@ -116,9 +130,13 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
         }
 
         public async Task<ApiResponse<bool>> AssignTicketAsync(
-            int ticketId, AssignTicketDto dto, string currentUserId)
+            AssignTicketDto dto)
         {
-            var ticket = await _unitOfWork.Tickets.GetByIdAsync(ticketId);
+
+            var currentUserId = _currentUserProvider.GetCurrentUserId();
+            if (string.IsNullOrEmpty(currentUserId)) return ApiResponse<bool>.Failure("User not found.");
+
+            var ticket = await _unitOfWork.Tickets.GetByIdAsync(dto.TicketId);
             if (ticket == null)
                 return ApiResponse<bool>.Failure("Ticket not found");
 
@@ -126,7 +144,9 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             ticket.AssignedToUserId = dto.AgentId;
             ticket.Status = TicketStatus.InProgress;
 
-            await _unitOfWork.Tickets.UpdateAsync(ticket);
+            await _unitOfWork.Tickets.UpdateAsync(ticket,
+                 t => t.AssignedToUserId,
+                 t => t.Status);
 
             // Audit log
             await _unitOfWork.AuditLogs.LogAsync(
@@ -143,19 +163,23 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             return ApiResponse<bool>.Success(true, "Ticket assigned successfully");
         }
         public async Task<ApiResponse<bool>> UpdateTicketPriorityAsync(
-            int ticketId, UpdateTicketStatusDto dto, string currentUserId)
+            UpdateTicketPriorityDto dto)
         {
-            var ticket = await _unitOfWork.Tickets.GetByIdAsync(ticketId);
+            var currentUserId = _currentUserProvider.GetCurrentUserId();
+            if (string.IsNullOrEmpty(currentUserId)) return ApiResponse<bool>.Failure("User not found.");
+
+
+            var ticket = await _unitOfWork.Tickets.GetByIdAsync(dto.TicketId);
             if (ticket == null)
                 return ApiResponse<bool>.Failure("Ticket not found");
 
-            if (!Enum.TryParse<TicketPriority>(dto.Status, out var newPriority))
+            if (!Enum.TryParse<TicketPriority>(dto.Priority, out var newPriority))
                 return ApiResponse<bool>.Failure("Invalid priority value");
 
             var oldPriority = ticket.Priority.ToString();
             ticket.Priority = newPriority;
 
-            await _unitOfWork.Tickets.UpdateAsync(ticket);
+            await _unitOfWork.Tickets.UpdateAsync(ticket, t => t.Priority);
 
             // Audit log
             await _unitOfWork.AuditLogs.LogAsync(

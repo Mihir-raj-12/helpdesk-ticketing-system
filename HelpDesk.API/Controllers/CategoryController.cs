@@ -21,7 +21,7 @@ namespace HelpDesk.API.Controllers
         [HttpGet]
         public async Task<ActionResult<ApiResponse<IEnumerable<CategoryResponseDto>>>> GetAllCategories()
         {
-            var result = await _categoryService.GetAllCategoriesAsync();
+            var result = await _categoryService.GetAllAsync();
 
             return Ok(result);
         }
@@ -31,7 +31,7 @@ namespace HelpDesk.API.Controllers
         public async Task<ActionResult<ApiResponse<CategoryResponseDto>>> CreateCategory([FromBody] CreateCategoryDto dto) 
         {
 
-            var result = await _categoryService.CreateCategoryAsync(dto);
+            var result = await _categoryService.CreateAsync(dto);
 
             if(!result.IsSuccess)
             {
@@ -42,11 +42,11 @@ namespace HelpDesk.API.Controllers
 
         }
 
-        [HttpPut("update")]
+        [HttpPut("updateCategory")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<ApiResponse<CategoryResponseDto>>> UpdateCategory([FromBody] UpdateCategoryDto request)
         {
-            var response = await _categoryService.UpdateCategoryAsync(request.Id, request);
+            var response = await _categoryService.UpdateCategoryAsync(request);
 
             if (!response.IsSuccess)
             {
@@ -57,11 +57,11 @@ namespace HelpDesk.API.Controllers
         }
 
 
-        [HttpPut("{id}/deactivate")]
+        [HttpPut("DeactivateCategory")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<ApiResponse<bool>>> DeactivateCategory(int id)
+        public async Task<ActionResult<ApiResponse<bool>>> DeactivateCategory([FromBody] int id)
         {
-            var response = await _categoryService.DeactivateCategoryAsync(id);
+            var response = await _categoryService.DeactivateAsync(id);
 
             if (!response.IsSuccess)
             {

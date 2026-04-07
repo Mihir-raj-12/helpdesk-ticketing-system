@@ -14,6 +14,10 @@ namespace HelpDesk.Core.Validators
         {
             RuleFor(x => x.AgentId)
                 .NotEmpty().WithMessage("Agent ID is required to assign a ticket.");
+
+            // Add this rule to protect the hidden ID!
+            RuleFor(x => x.TicketId)
+                .GreaterThan(0).WithMessage("Valid Ticket ID is required.");
         }
     }
 }

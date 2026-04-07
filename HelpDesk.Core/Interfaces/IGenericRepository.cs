@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,8 +14,8 @@ namespace HelpDesk.Core.Interfaces
         Task<IEnumerable<T>> GetAllAsync();
 
         Task<T> AddAsync(T entity);
-        Task UpdateAsync (T entity);
-
+   
+        Task UpdateAsync(T entity, params Expression<Func<T, object>>[] properties);
         Task SoftDeleteAsync(int id);
     }
 }

@@ -13,7 +13,7 @@ namespace HelpDesk.Core.Entities
 
         public DateTime LastUpdatedDate { get; set; }
 
-        public bool isActive { get; set; } = true;
+        public bool IsActive { get; set; } = true;
 
     }
 }

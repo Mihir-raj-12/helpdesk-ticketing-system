@@ -27,7 +27,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Repository
                 PerformedAt = DateTime.UtcNow,
                 CreatedDate = DateTime.UtcNow,
                 LastUpdatedDate = DateTime.UtcNow,
-                isActive = true
+                IsActive = true
             };
 
             await _dbSet.AddAsync(auditLog);
@@ -43,7 +43,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Repository
                     NewValue = change.newValue,
                     CreatedDate = DateTime.UtcNow,
                     LastUpdatedDate = DateTime.UtcNow,
-                    isActive = true
+                    IsActive = true
                 };
                 _context.AuditDetails.Add(detail);
             }

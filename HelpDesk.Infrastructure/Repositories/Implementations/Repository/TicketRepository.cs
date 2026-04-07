@@ -23,7 +23,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Repository
                 .Include(t => t.Category)
                 .Include(t => t.RaisedByUser)
                 .Include(t => t.AssignedToUser)
-                .Where(t => t.RaisedByUserId == userId && t.isActive)
+                .Where(t => t.RaisedByUserId == userId && t.IsActive)
                 .OrderByDescending(t => t.CreatedDate)
                 .ToListAsync();
         }
@@ -34,7 +34,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Repository
                 .Include(t => t.Category)
                 .Include(t => t.RaisedByUser)
                 .Include(t => t.AssignedToUser)
-                .Where(t => t.AssignedToUserId == agentId && t.isActive)
+                .Where(t => t.AssignedToUserId == agentId && t.IsActive)
                 .OrderByDescending(t => t.CreatedDate)
                 .ToListAsync();
         }
@@ -47,7 +47,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Repository
                 .Include(t => t.AssignedToUser)
                 .Include(t => t.Comments)
                     .ThenInclude(c => c.User)
-                .FirstOrDefaultAsync(t => t.Id == ticketId && t.isActive);
+                .FirstOrDefaultAsync(t => t.Id == ticketId && t.IsActive);
         }
 
         public async Task<IEnumerable<Ticket>> GetAllTicketsWithDetailsAsync()
@@ -56,7 +56,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Repository
                 .Include(t => t.Category)
                 .Include(t => t.RaisedByUser)
                 .Include(t => t.AssignedToUser)
-                .Where(t => t.isActive)
+                .Where(t => t.IsActive)
                 .OrderByDescending(t => t.CreatedDate)
                 .ToListAsync();
         }

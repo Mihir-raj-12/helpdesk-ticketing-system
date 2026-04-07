@@ -11,62 +11,29 @@ using System.Threading.Tasks;
 
 namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 {
-    public class CategoryService : ICategoryService
+    public class CategoryService : GenericService<CategoryResponseDto, Category>, ICategoryService
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
-
-        public CategoryService(IUnitOfWork unitOfWork, IMapper mapper)
+        public CategoryService(IUnitOfWork unitOfWork, IMapper mapper, ICurrentUserProvider currentUserProvider)
+            : base(mapper, unitOfWork, currentUserProvider, unitOfWork.Categories) // Pass UnitOfWork.Categories to the base class!
         {
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
         }
 
-        public async Task<ApiResponse<CategoryResponseDto>> CreateCategoryAsync (CreateCategoryDto dto)
+        // We only need to write the custom Update logic, because the GenericService handles the rest!
+        public async Task<ApiResponse<bool>> UpdateCategoryAsync(UpdateCategoryDto dto)
         {
-            var category = _mapper.Map<Category>(dto);
-            await _unitOfWork.Categories.AddAsync(category);
-            await _unitOfWork.SaveChangesAsync();
-            var responseDto = _mapper.Map<CategoryResponseDto>(category);
-            return ApiResponse<CategoryResponseDto>.Success(responseDto,"Category Created SuccessFully");
-
-        }
-
-        public async Task<ApiResponse<List<CategoryResponseDto>>> GetAllCategoriesAsync()
-        {
-            var categories = await _unitOfWork.Categories.GetAllAsync();
-            var responseDto =_mapper.Map<List<CategoryResponseDto>>(categories);
-            return ApiResponse<List<CategoryResponseDto>>.Success(responseDto);
-        }
-
-
-        public async Task<ApiResponse<bool>> UpdateCategoryAsync(int id , UpdateCategoryDto dto)
-        {
-            var category = await _unitOfWork.Categories.GetByIdAsync(id);
-            if(category == null)
+            var category = await _unitOfWork.Categories.GetByIdAsync(dto.Id);
+            if (category == null)
             {
                 return ApiResponse<bool>.Failure("Category Not Found");
             }
 
             category.Name = dto.Name;
-            await _unitOfWork.Categories.UpdateAsync(category);
+
+            // Notice how we use our new partial update feature here!
+            await _unitOfWork.Categories.UpdateAsync(category, c => c.Name);
             await _unitOfWork.SaveChangesAsync();
-            return ApiResponse<bool>.Success(true,"Category Updated Successfully");
-        }
 
-        public async Task<ApiResponse<bool>> DeactivateCategoryAsync(int id)
-        {
-            var category = await _unitOfWork.Categories.GetByIdAsync(id);
-            if (category == null)
-            {
-                return ApiResponse<bool>.Failure("category Not Found");
-
-            }
-
-            await _unitOfWork.Categories.SoftDeleteAsync(id);
-            await _unitOfWork.SaveChangesAsync();
-            return ApiResponse<bool>.Success(true, "Category Deactivated Successfully");
-
+            return ApiResponse<bool>.Success(true, "Category Updated Successfully");
         }
     }
 }

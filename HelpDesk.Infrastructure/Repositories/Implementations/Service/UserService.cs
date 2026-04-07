@@ -36,7 +36,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
            {
                 UserName = dto.Email,
                 Email = dto.Email,
-                FullName = dto.FullName,
+                FullName = dto.FullName, 
                 IsActive = true,
                 CreatedDate = DateTime.UtcNow
             };

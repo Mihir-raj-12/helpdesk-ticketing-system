@@ -20,7 +20,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Repository
         {
             return await _dbSet
                 .Include(c => c.User)
-                .Where(c => c.TicketId == ticketId && c.isActive)
+                .Where(c => c.TicketId == ticketId && c.IsActive)
                 .OrderBy(c => c.CreatedDate)
                 .ToListAsync();
         }

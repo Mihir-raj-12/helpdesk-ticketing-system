@@ -10,9 +10,7 @@ namespace HelpDesk.Core.Interfaces
 {
     public interface ICommentService
     {
-        Task<ApiResponse<CommentResponseDto>> AddCommentAsync(
-            CreateCommentDto dto, string currentUserId);
-        Task<ApiResponse<List<CommentResponseDto>>> GetCommentsByTicketIdAsync(
-            int ticketId, string currentUserId, string currentUserRole);
+        Task<ApiResponse<CommentResponseDto>> AddCommentAsync(CreateCommentDto dto);
+        Task<ApiResponse<List<CommentResponseDto>>> GetCommentsByTicketIdAsync(int ticketId);
     }
 }

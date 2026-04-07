@@ -10,6 +10,6 @@ namespace HelpDesk.Core.Interfaces
 {
     public interface IDashboardService
     {
-        Task<ApiResponse<DashboardResponseDto>> GetDashboardStatusAsync(string currentUserId, string currentUserRole);
+        Task<ApiResponse<DashboardResponseDto>> GetDashboardStatusAsync();
     }
 }

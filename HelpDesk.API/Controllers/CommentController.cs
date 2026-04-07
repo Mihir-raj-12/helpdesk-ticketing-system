@@ -23,12 +23,8 @@ namespace HelpDesk.API.Controllers
         [HttpPost]
         public async Task<ActionResult<ApiResponse<CommentResponseDto>>> AddComment([FromBody] CreateCommentDto dto)
         {
-            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(currentUserId))
-            {
-                return Unauthorized(ApiResponse<string>.Failure("UserId is not found from token"));
-            }
-            var result = await _commentService.AddCommentAsync(dto, currentUserId);
+           
+            var result = await _commentService.AddCommentAsync(dto);
             if (!result.IsSuccess)
             {
                 return BadRequest(result);

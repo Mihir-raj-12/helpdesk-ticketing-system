@@ -10,17 +10,11 @@ namespace HelpDesk.Core.Interfaces
 {
     public interface ITicketService
     {
-        Task<ApiResponse<TicketResponseDto>> CreateTicketAsync(
-            CreateTicketDto dto, string currentUserId);
-        Task<ApiResponse<List<TicketResponseDto>>> GetTicketsAsync(
-            string currentUserId, string currentUserRole);
-        Task<ApiResponse<TicketResponseDto>> GetTicketByIdAsync(
-            int ticketId, string currentUserId, string currentUserRole);
-        Task<ApiResponse<bool>> UpdateTicketStatusAsync(
-            int ticketId, UpdateTicketStatusDto dto, string currentUserId);
-        Task<ApiResponse<bool>> AssignTicketAsync(
-            int ticketId, AssignTicketDto dto, string currentUserId);
-        Task<ApiResponse<bool>> UpdateTicketPriorityAsync(
-            int ticketId, UpdateTicketStatusDto dto, string currentUserId);
+        Task<ApiResponse<TicketResponseDto>> CreateTicketAsync(CreateTicketDto dto);
+        Task<ApiResponse<List<TicketResponseDto>>> GetTicketsAsync();
+        Task<ApiResponse<TicketResponseDto>> GetTicketByIdAsync(int ticketId);
+        Task<ApiResponse<bool>> UpdateTicketStatusAsync(UpdateTicketStatusDto dto);
+        Task<ApiResponse<bool>> AssignTicketAsync(AssignTicketDto dto);
+        Task<ApiResponse<bool>> UpdateTicketPriorityAsync(UpdateTicketPriorityDto dto);
     }
 }

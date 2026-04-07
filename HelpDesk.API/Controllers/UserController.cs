@@ -40,8 +40,8 @@ namespace HelpDesk.API.Controllers
         }
 
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ApiResponse<UserResponseDto>>> GetUserById(string id)
+        [HttpPost("GetById")]
+        public async Task<ActionResult<ApiResponse<UserResponseDto>>> GetUserById([FromBody]string id)
         {
             var response = await _userService.GetUserByIdAsync(id);
 
@@ -53,8 +53,8 @@ namespace HelpDesk.API.Controllers
             return Ok(response);
         }
 
-        [HttpPut("{id}/deactivate")]
-        public async Task<ActionResult<ApiResponse<bool>>> DeactivateUser(string id)
+        [HttpPut("DeactivateUser")]
+        public async Task<ActionResult<ApiResponse<bool>>> DeactivateUser([FromBody]string id)
         {
             var response = await _userService.DeactivateUserAsync(id);
 

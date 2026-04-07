@@ -23,15 +23,9 @@ namespace HelpDesk.API.Controllers
         [HttpGet("stats")]
         public async Task<ActionResult<ApiResponse<DashboardResponseDto>>> GetStats()
         {
-            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var currentUserRole = User.FindFirst(ClaimTypes.Role)?.Value;
+           
 
-            if (string.IsNullOrEmpty(currentUserId) || string.IsNullOrEmpty(currentUserRole))
-            {
-                return Unauthorized(ApiResponse<DashboardResponseDto>.Failure("Invalid token claims."));
-            }
-
-            var response = await _dashboardService.GetDashboardStatusAsync(currentUserId, currentUserRole);
+            var response = await _dashboardService.GetDashboardStatusAsync();
 
             if (!response.IsSuccess)
             {

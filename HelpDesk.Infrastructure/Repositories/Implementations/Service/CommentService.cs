@@ -16,15 +16,20 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
     {
         private readonly IMapper _mapper;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly ICurrentUserProvider _currentUserProvider;
 
-        public CommentService (IMapper   mapper, IUnitOfWork unitOfWork)
+        public CommentService (IMapper mapper, IUnitOfWork unitOfWork,ICurrentUserProvider currentUserProvider)
         {
             _mapper = mapper;
             _unitOfWork = unitOfWork;
+            _currentUserProvider = currentUserProvider;
         }
 
-        public async Task<ApiResponse<CommentResponseDto>> AddCommentAsync(CreateCommentDto dto, string currentUserId)
+        public async Task<ApiResponse<CommentResponseDto>> AddCommentAsync(CreateCommentDto dto)
         {
+            var currentUserId = _currentUserProvider.GetCurrentUserId();
+            if (string.IsNullOrEmpty(currentUserId)) return ApiResponse<CommentResponseDto>.Failure("User not found.");
+
             var ticket = await _unitOfWork.Tickets.GetByIdAsync(dto.TicketId);
             if (ticket == null)
             {
@@ -47,8 +52,10 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 
 
         public async Task<ApiResponse<List<CommentResponseDto>>> GetCommentsByTicketIdAsync
-            (int TicketId , string currentUserID , string currentUserRole)
+            (int TicketId)
         {
+            var currentUserID = _currentUserProvider.GetCurrentUserId();
+            var currentUserRole = _currentUserProvider.GetCurrentUserRole();
 
             var ticket = await _unitOfWork.Tickets.GetByIdAsync(TicketId);
 
