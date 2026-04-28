@@ -49,12 +49,12 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             }
 
 
-            await _userManager.AddToRoleAsync(user, dto.Role);
+            await _userManager.AddToRoleAsync(user, dto.Role.ToString());
 
             var responseDto = _mapper.Map<UserResponseDto>(user);
-            responseDto.Role = dto.Role;
+            responseDto.Role = dto.Role.ToString();
             return ApiResponse<UserResponseDto>.Success(
-                responseDto, "User created successfully");
+                responseDto, "User created successfully"); 
         }
 
         public async Task<ApiResponse<List<UserResponseDto>>> GetAllUserAsync()
@@ -93,7 +93,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             var currentRoles = await _userManager.GetRolesAsync(user);
             await _userManager.RemoveFromRolesAsync(user, currentRoles);
 
-            var result = await _userManager.AddToRoleAsync(user, dto.NewRole);
+            var result = await _userManager.AddToRoleAsync(user, dto.NewRole.ToString());
             if (!result.Succeeded)
                 return ApiResponse<bool>.Failure("Failed to update role");
 
@@ -109,6 +109,26 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             user.IsActive = false;
             await _userManager.UpdateAsync(user);
             return ApiResponse<bool>.Success(true, "User deactivated successfully");
+        }
+
+        public async Task<ApiResponse<List<UserResponseDto>>> GetSupportAgentsAsync()
+        {
+            
+            var agents = await _userManager.GetUsersInRoleAsync("SupportAgent");
+
+           
+            var activeAgents = agents.Where(a => a.IsActive).ToList();
+
+          
+            var responseDto = new List<UserResponseDto>();
+            foreach (var agent in activeAgents)
+            {
+                var dto = _mapper.Map<UserResponseDto>(agent);
+                dto.Role = "SupportAgent";
+                responseDto.Add(dto);
+            }
+
+            return ApiResponse<List<UserResponseDto>>.Success(responseDto);
         }
     }
 }

@@ -4,11 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HelpDesk.Core.DTOs.Auth
+namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 {
-    public class LoginResponseDto
+    internal class DepartmentService
     {
-        public string Token { get; set; } = string.Empty;
-      
     }
 }

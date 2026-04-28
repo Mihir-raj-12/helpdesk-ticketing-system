@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace HelpDesk.Core.Entities
 {
     public class AuditDetail : BaseEntity
@@ -19,3 +16,4 @@ namespace HelpDesk.Core.Entities
         public AuditLog AuditLog { get; set; } = null!;
     }
 }
+

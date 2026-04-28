@@ -24,12 +24,23 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200") 
+              .AllowAnyHeader()                     
+              .AllowAnyMethod();                    
+    });
+});
+
+
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestDtoValidator>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    // 1. Tell Swagger we want a padlock icon and a text box for our token
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n" +
@@ -41,7 +52,6 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer"
     });
 
-    // 2. Tell Swagger to automatically attach that token to every request we make
     options.AddSecurityRequirement(new OpenApiSecurityRequirement()
     {
         {
@@ -63,8 +73,6 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-//Register Identity services
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -93,7 +101,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddHttpContextAccessor();
 
-// 2. Register our new Provider
+
 builder.Services.AddScoped<ICurrentUserProvider, CurrentUserProvider>();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -104,6 +112,7 @@ builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<ILookupService, LookupService>();
 
 var app = builder.Build();
 
@@ -116,6 +125,7 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<HelpDesk.API.Middleware.ErrorHandlingMiddleware>();
 
 app.UseHttpsRedirection();
+app.UseCors("AllowAngularApp");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
@@ -129,7 +139,6 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        // In a real production app, we would log this using an ILogger
         Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
     }
 }

@@ -43,12 +43,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 
             var response = new LoginResponseDto
             {
-                Token = token,
-                FullName = user.FullName,
-                Email = user.Email ?? string.Empty,
-                Role = role,
-                ExpiresAt = DateTime.UtcNow.AddDays(
-                    _configuration.GetValue<int>("JwtSettings:ExpiryInDays"))
+                Token = token
             };
 
             return ApiResponse<LoginResponseDto>.Success(response, "Login successful");

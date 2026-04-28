@@ -19,6 +19,7 @@ namespace HelpDesk.Core.Interfaces
         Task<ApiResponse<bool>> UpdateUserRoleAsync (UpdateUserRoleDto dto);
          Task<ApiResponse<bool>> DeactivateUserAsync (string id);
 
+        Task<ApiResponse<List<UserResponseDto>>> GetSupportAgentsAsync();
 
     }
 }

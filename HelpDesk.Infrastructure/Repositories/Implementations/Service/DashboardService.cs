@@ -41,33 +41,34 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             {
                 TotalTickets = tickets.Count,
 
-                OpenTickets = tickets.Count(t => t.Status == TicketStatus.Open.ToString()),
-                InProgressTickets = tickets.Count(t => t.Status == TicketStatus.InProgress.ToString()),
-                ResolvedTickets = tickets.Count(t => t.Status == TicketStatus.Resolved.ToString()),
-                OnHoldTickets = tickets.Count(t => t.Status == "OnHold"),
-                ClosedTickets = tickets.Count(t => t.Status == "Closed"),
+                // Look how much cleaner this is without .ToString()!
+                OpenTickets = tickets.Count(t => t.Status == TicketStatus.Open),
+                InProgressTickets = tickets.Count(t => t.Status == TicketStatus.InProgress),
+                ResolvedTickets = tickets.Count(t => t.Status == TicketStatus.Resolved),
+                OnHoldTickets = tickets.Count(t => t.Status == TicketStatus.OnHold),
+                ClosedTickets = tickets.Count(t => t.Status == TicketStatus.Closed),
 
-                LowPriorityTickets = tickets.Count(t => t.Priority == TicketPriority.Low.ToString()),
-                MediumPriorityTickets = tickets.Count(t => t.Priority == TicketPriority.Medium.ToString()),
-                HighPriorityTickets = tickets.Count(t => t.Priority == TicketPriority.High.ToString()),
-                CriticalPriorityTickets = tickets.Count(t => t.Priority == "Critical"),
+                LowPriorityTickets = tickets.Count(t => t.Priority == TicketPriority.Low),
+                MediumPriorityTickets = tickets.Count(t => t.Priority == TicketPriority.Medium),
+                HighPriorityTickets = tickets.Count(t => t.Priority == TicketPriority.High),
+                CriticalPriorityTickets = tickets.Count(t => t.Priority == TicketPriority.Critical),
 
                 TicketsThisMonth = tickets.Count(t => t.CreatedDate >= startOfThisMonth),
                 TicketsLastMonth = tickets.Count(t => t.CreatedDate >= startOfLastMonth && t.CreatedDate < startOfThisMonth),
 
                 TopAgents = tickets
-                    .Where(t => t.Status == TicketStatus.Resolved.ToString() && !string.IsNullOrEmpty(t.AssignedToUserName))
-                    .GroupBy(t => t.AssignedToUserName)
-                    .Select(g => new TopAgentDto
-                    {
-                        AgentName = g.Key,
-                        ResolvedTicketsCount = g.Count()
-                    })
-                    .OrderByDescending(a => a.ResolvedTicketsCount)
-                    .Take(5)
-                    .ToList()
+                     // Removed .ToString() here as well!
+                     .Where(t => t.Status == TicketStatus.Resolved && !string.IsNullOrEmpty(t.AssignedToUserName))
+                     .GroupBy(t => t.AssignedToUserName)
+                     .Select(g => new TopAgentDto
+                     {
+                         AgentName = g.Key,
+                         ResolvedTicketsCount = g.Count()
+                     })
+                     .OrderByDescending(a => a.ResolvedTicketsCount)
+                     .Take(5)
+                     .ToList()
             };
-
             return ApiResponse<DashboardResponseDto>.Success(stats);
         
 

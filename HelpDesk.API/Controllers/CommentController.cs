@@ -31,5 +31,18 @@ namespace HelpDesk.API.Controllers
             }
             return Ok(result);
         }
+
+        [HttpGet("getByTicketId")]
+        public async Task<ActionResult<ApiResponse<List<CommentResponseDto>>>> GetComments([FromQuery] int ticketId)
+        {
+            var result = await _commentService.GetCommentsByTicketIdAsync(ticketId);
+
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
     }
 }

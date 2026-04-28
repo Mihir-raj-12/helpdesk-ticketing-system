@@ -8,7 +8,7 @@ namespace HelpDesk.Core.DTOs.Ticket
 {
     public class AssignTicketDto
     {
-        public int TicketId { get; set; } // <-- Add this!
+        public int TicketId { get; set; } 
         public string AgentId { get; set; } = string.Empty;
     }
 }

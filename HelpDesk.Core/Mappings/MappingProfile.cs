@@ -22,18 +22,14 @@ namespace HelpDesk.Core.Mappings
 
             // Ticket mappings
             CreateMap<Ticket, TicketResponseDto>()
-                .ForMember(dest => dest.CategoryName,
-                    opt => opt.MapFrom(src => src.Category.Name))
-                .ForMember(dest => dest.RaisedByUserName,
-                    opt => opt.MapFrom(src => src.RaisedByUser.FullName))
-                .ForMember(dest => dest.AssignedToUserName,
-                    opt => opt.MapFrom(src => src.AssignedToUser != null
-                        ? src.AssignedToUser.FullName
-                        : null))
-                .ForMember(dest => dest.Status,
-                    opt => opt.MapFrom(src => src.Status.ToString()))
-                .ForMember(dest => dest.Priority,
-                    opt => opt.MapFrom(src => src.Priority.ToString()));
+     .ForMember(dest => dest.CategoryName,
+         opt => opt.MapFrom(src => src.Category.Name))
+     .ForMember(dest => dest.RaisedByUserName,
+         opt => opt.MapFrom(src => src.RaisedByUser.FullName))
+     .ForMember(dest => dest.AssignedToUserName,
+         opt => opt.MapFrom(src => src.AssignedToUser != null
+             ? src.AssignedToUser.FullName
+             : null));
 
             CreateMap<CreateTicketDto, Ticket>();
 

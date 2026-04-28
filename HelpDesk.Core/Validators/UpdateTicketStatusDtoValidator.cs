@@ -13,11 +13,9 @@ namespace HelpDesk.Core.Validators
     {
         public UpdateTicketStatusDtoValidator()
         {
-            // The Fix: Use IsEnumName instead of IsInEnum
             RuleFor(x => x.Status)
-                .NotEmpty().WithMessage("Status is required.")
-                .IsEnumName(typeof(TicketStatus), caseSensitive: false)
-                .WithMessage("Invalid Ticket Status.");
+                    .IsInEnum()
+                    .WithMessage("Invalid Ticket Status. Please provide a valid status ID.");
 
             RuleFor(x => x.TicketId)
                 .GreaterThan(0).WithMessage("Ticket ID is required.");

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HelpDesk.Core.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,6 +10,6 @@ namespace HelpDesk.Core.DTOs.User
     public class UpdateUserRoleDto
     {
         public string UserId { get; set; } = string.Empty;
-        public string NewRole { get; set; } = string.Empty;
+        public UserRole NewRole { get; set; }
     }
 }

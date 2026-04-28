@@ -50,6 +50,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Repository
                 .FirstOrDefaultAsync(t => t.Id == ticketId && t.IsActive);
         }
 
+
         public async Task<IEnumerable<Ticket>> GetAllTicketsWithDetailsAsync()
         {
             return await _dbSet

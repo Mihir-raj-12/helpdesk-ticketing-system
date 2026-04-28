@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HelpDesk.Core.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,7 @@ namespace HelpDesk.Core.DTOs.Ticket
 {
     public class UpdateTicketStatusDto
     {
-        public int TicketId { get; set; } // <-- Add this!
-        public string Status { get; set; } = string.Empty;
+        public int TicketId { get; set; }
+        public TicketStatus Status { get; set; }
     }
 }

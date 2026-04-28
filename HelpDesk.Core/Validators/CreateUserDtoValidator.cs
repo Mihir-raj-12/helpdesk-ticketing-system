@@ -22,7 +22,7 @@ namespace HelpDesk.Core.Validators
             RuleFor(x => x.Password)
                 .NotEmpty().WithMessage("Password is required.")
                 .MinimumLength(6).WithMessage("Password must be at least 6 characters long.");
-            RuleFor(x => x.Role)
+            RuleFor(x => x.Role.ToString())
                .IsEnumName(typeof(UserRole), caseSensitive: false)
                 .WithMessage("Invalid User Role selected.");
         }

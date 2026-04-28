@@ -10,7 +10,7 @@ namespace HelpDesk.Core.Interfaces
 {
     public interface ITicketService
     {
-        Task<ApiResponse<TicketResponseDto>> CreateTicketAsync(CreateTicketDto dto);
+        Task<ApiResponse<CreateTicketResponseDto>> CreateTicketAsync(CreateTicketDto dto);
         Task<ApiResponse<List<TicketResponseDto>>> GetTicketsAsync();
         Task<ApiResponse<TicketResponseDto>> GetTicketByIdAsync(int ticketId);
         Task<ApiResponse<bool>> UpdateTicketStatusAsync(UpdateTicketStatusDto dto);

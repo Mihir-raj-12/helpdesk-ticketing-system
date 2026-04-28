@@ -48,7 +48,10 @@ namespace HelpDesk.Infrastructure.Data
                     FullName = "System Administrator",
                     IsActive = true,
                     CreatedDate = DateTime.UtcNow,
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
+
+                    // NEW: Assign the Admin to the default 'General' department we seeded in DbContext!
+                    DepartmentId = 1
                 };
 
                 // Create the user with a default password

@@ -23,7 +23,7 @@ namespace HelpDesk.API.Controllers
 
 
         [HttpPost]
-        public async Task<ActionResult<ApiResponse<TicketResponseDto>>> CreateTicket([FromBody] CreateTicketDto dto)
+        public async Task<ActionResult<ApiResponse<CreateTicketResponseDto>>> CreateTicket([FromBody] CreateTicketDto dto)
         {
 
 
@@ -52,12 +52,16 @@ namespace HelpDesk.API.Controllers
 
         }
 
-        [HttpPost("GetTicketById")]
-        public async Task<ActionResult<ApiResponse<TicketResponseDto>>> GetTicketById([FromBody] int ticketId)
+        [HttpGet("getById")]
+        public async Task<ActionResult<ApiResponse<TicketResponseDto>>> GetTicketById([FromQuery] int id)
         {
-     
-            var result = await _ticketService.GetTicketByIdAsync(ticketId);
-            if (!result.IsSuccess) return BadRequest(result);
+            var result = await _ticketService.GetTicketByIdAsync(id);
+
+            if (!result.IsSuccess)
+            {
+                return NotFound(result);
+            }
+
             return Ok(result);
         }
 

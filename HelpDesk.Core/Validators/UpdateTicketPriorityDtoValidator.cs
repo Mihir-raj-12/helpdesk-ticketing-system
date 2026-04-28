@@ -14,9 +14,8 @@ namespace HelpDesk.Core.Validators
         public UpdateTicketPriorityDtoValidator()
         {
             RuleFor(x => x.Priority)
-                .NotEmpty().WithMessage("Priority is required.")
-                .IsEnumName(typeof(TicketPriority), caseSensitive: false) // Validates against Priority!
-                .WithMessage("Invalid Ticket Priority.");
+                   .IsInEnum()
+                   .WithMessage("Invalid Ticket Priority. Please provide a valid priority ID.");
 
             RuleFor(x => x.TicketId)
                 .GreaterThan(0).WithMessage("Ticket ID is required.");

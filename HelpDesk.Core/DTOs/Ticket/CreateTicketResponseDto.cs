@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace HelpDesk.Core.DTOs.Ticket
 {
-    public class UpdateTicketPriorityDto
+    public class CreateTicketResponseDto
     {
-        public int TicketId { get; set; }
-        public TicketPriority Priority { get; set; }
+        public int Id { get; set; }
+        public TicketStatus Status { get; set; }
     }
 }

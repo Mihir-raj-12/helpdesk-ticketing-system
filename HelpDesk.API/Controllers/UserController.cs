@@ -9,7 +9,7 @@ namespace HelpDesk.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -19,6 +19,7 @@ namespace HelpDesk.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<ApiResponse<UserResponseDto>>> CreateUser([FromBody] CreateUserDto dto)
         {
             var result = await _userService.CreateUserAsync(dto);
@@ -30,7 +31,7 @@ namespace HelpDesk.API.Controllers
         }
 
         [HttpGet]
-
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<ApiResponse<IEnumerable<UserResponseDto>>>> GetAllUsers()
         {
             var result = await _userService.GetAllUserAsync();
@@ -40,20 +41,22 @@ namespace HelpDesk.API.Controllers
         }
 
 
-        [HttpPost("GetById")]
-        public async Task<ActionResult<ApiResponse<UserResponseDto>>> GetUserById([FromBody]string id)
+        [HttpGet("getById")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<ApiResponse<UserResponseDto>>> GetUserById([FromQuery] string id)
         {
-            var response = await _userService.GetUserByIdAsync(id);
+            var result = await _userService.GetUserByIdAsync(id);
 
-            if (!response.IsSuccess)
+            if (!result.IsSuccess)
             {
-                return NotFound(response);
+                return NotFound(result);
             }
 
-            return Ok(response);
+            return Ok(result);
         }
 
         [HttpPut("DeactivateUser")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<ApiResponse<bool>>> DeactivateUser([FromBody]string id)
         {
             var response = await _userService.DeactivateUserAsync(id);
@@ -67,6 +70,7 @@ namespace HelpDesk.API.Controllers
         }
 
         [HttpPut("role")]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<ApiResponse<bool>>> UpdateRole([FromBody] UpdateUserRoleDto request)
         {
           
@@ -78,6 +82,20 @@ namespace HelpDesk.API.Controllers
             }
 
             return Ok(response);
+        }
+
+        [HttpGet("agents")]
+        [Authorize(Roles = "Admin, SupportAgent")]
+        public async Task<ActionResult<ApiResponse<IEnumerable<UserResponseDto>>>> GetSupportAgents()
+        {
+            var result = await _userService.GetSupportAgentsAsync();
+
+            if (!result.IsSuccess)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
         }
 
     }

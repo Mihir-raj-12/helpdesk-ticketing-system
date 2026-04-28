@@ -26,30 +26,30 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
         }
 
 
-        public async Task<ApiResponse<TicketResponseDto>> CreateTicketAsync (
-            CreateTicketDto dto
-            )
+        public async Task<ApiResponse<CreateTicketResponseDto>> CreateTicketAsync(CreateTicketDto dto)
         {
             var currentUserId = _currentUserProvider.GetCurrentUserId();
-            if (string.IsNullOrEmpty(currentUserId)) return ApiResponse<TicketResponseDto>.Failure("User not found.");
+            if (string.IsNullOrEmpty(currentUserId)) return ApiResponse<CreateTicketResponseDto>.Failure("User not found.");
 
             var ticket = _mapper.Map<Ticket>(dto);
             ticket.Status = TicketStatus.Open;
 
             ticket.RaisedByUserId = !string.IsNullOrEmpty(dto.RaisedForUserId) ? dto.RaisedForUserId : currentUserId;
 
-
             await _unitOfWork.Tickets.AddAsync(ticket);
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync(); 
 
-            var savedTicket = await _unitOfWork.Tickets.GetTicketWithDetailsAsync(ticket.Id);
-            var responseDto = _mapper.Map<TicketResponseDto>(savedTicket);
+            var responseDto = new CreateTicketResponseDto
+            {
+                Id = ticket.Id,
+                Status = ticket.Status
+            };
 
-            return ApiResponse<TicketResponseDto>.Success(responseDto ,"Ticket Created successfully");
-
+            return ApiResponse<CreateTicketResponseDto>.Success(responseDto, "Ticket Created successfully");
         }
 
         public async Task<ApiResponse<List<TicketResponseDto>>> GetTicketsAsync()
+
         {
             var currentUserId = _currentUserProvider.GetCurrentUserId();
             var currentUserRole = _currentUserProvider.GetCurrentUserRole();
@@ -94,7 +94,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 
         public async Task<ApiResponse<bool>> UpdateTicketStatusAsync(
             UpdateTicketStatusDto dto)
-        {
+        {   
             var currentUserId = _currentUserProvider.GetCurrentUserId();
             if (string.IsNullOrEmpty(currentUserId)) return ApiResponse<bool>.Failure("User not found.");
 
@@ -107,22 +107,22 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
                 return ApiResponse<bool>.Failure(
                     "You can only update status of tickets assigned to you");
 
-            if (!Enum.TryParse<TicketStatus>(dto.Status, out var newStatus))
+            if (!Enum.IsDefined(typeof(TicketStatus), dto.Status))
                 return ApiResponse<bool>.Failure("Invalid status value");
 
-            var oldStatus = ticket.Status.ToString();
-            ticket.Status = newStatus;
+            var oldStatus = ticket.Status;
+
+            ticket.Status = dto.Status;
 
             await _unitOfWork.Tickets.UpdateAsync(ticket, t => t.Status);
 
-            // Audit log
             await _unitOfWork.AuditLogs.LogAsync(
                 tableName: "Tickets",
                 action: "UpdateStatus",
                 performedByUserId: currentUserId,
                 changes: new List<(string, string?, string?)>
                 {
-                    ("Status", oldStatus, newStatus.ToString())
+                    ("Status", oldStatus.ToString(), dto.Status.ToString())
                 });
 
             await _unitOfWork.SaveChangesAsync();
@@ -173,22 +173,25 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             if (ticket == null)
                 return ApiResponse<bool>.Failure("Ticket not found");
 
-            if (!Enum.TryParse<TicketPriority>(dto.Priority, out var newPriority))
+        
+            if (!Enum.IsDefined(typeof(TicketPriority), dto.Priority))
                 return ApiResponse<bool>.Failure("Invalid priority value");
 
-            var oldPriority = ticket.Priority.ToString();
-            ticket.Priority = newPriority;
+            var oldPriority = ticket.Priority;
+
+  
+            ticket.Priority = dto.Priority;
 
             await _unitOfWork.Tickets.UpdateAsync(ticket, t => t.Priority);
 
-            // Audit log
+    
             await _unitOfWork.AuditLogs.LogAsync(
                 tableName: "Tickets",
                 action: "UpdatePriority",
                 performedByUserId: currentUserId,
                 changes: new List<(string, string?, string?)>
                 {
-                    ("Priority", oldPriority, newPriority.ToString())
+                    ("Priority", oldPriority.ToString(), dto.Priority.ToString())
                 });
 
             await _unitOfWork.SaveChangesAsync();
