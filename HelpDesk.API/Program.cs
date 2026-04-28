@@ -10,10 +10,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.SwaggerGen;
-using Swashbuckle.AspNetCore.SwaggerUI;
+
 using System.Text;
 
 
@@ -113,6 +111,8 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ILookupService, LookupService>();
+// Add this right next to your other service registrations:
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 
 var app = builder.Build();
 
@@ -141,6 +141,7 @@ using (var scope = app.Services.CreateScope())
     {
         Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
     }
+
 }
 
 app.Run();
