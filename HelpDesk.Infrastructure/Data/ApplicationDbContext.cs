@@ -24,6 +24,8 @@ namespace HelpDesk.Infrastructure.Data
         // NEW: Add the Departments table
         public DbSet<Department> Departments { get; set; }
 
+        public DbSet<SystemSetting> SystemSettings { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -108,6 +110,26 @@ namespace HelpDesk.Infrastructure.Data
                     Name = "General",
                     IsActive = true,
                     DepartmentHeadId = null
+                }
+            );
+
+
+            // --- SYSTEM SETTINGS SEED ---
+            builder.Entity<SystemSetting>().HasKey(s => s.Id);
+
+            builder.Entity<SystemSetting>().HasData(
+                new SystemSetting
+                {
+                    Id = 1,
+                    SystemName = "Help Desk Ticket Management System",
+                    SupportEmailAddress = "helpdesk@company.com",
+                    BusinessHourStart = new TimeSpan(9, 0, 0),
+                    BusinessHourEnd = new TimeSpan(17, 0, 0),
+                    WorkingDays = "Monday,Tuesday,Wednesday,Thursday,Friday",
+                    SlaCriticalResolutionHours = 4,
+                    SlaHighResolutionHours = 8,
+                    SlaMediumResolutionHours = 24,
+                    SlaLowResolutionHours = 40
                 }
             );
         }

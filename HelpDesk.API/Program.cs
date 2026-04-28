@@ -113,6 +113,7 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ILookupService, LookupService>();
 // Add this right next to your other service registrations:
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+builder.Services.AddScoped<ISystemSettingService, SystemSettingService>();
 
 var app = builder.Build();
 
