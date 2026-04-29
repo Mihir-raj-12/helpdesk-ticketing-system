@@ -5,6 +5,7 @@ using HelpDesk.Core.Interfaces;
 using HelpDesk.Core.Mappings;
 using HelpDesk.Core.Validators;
 using HelpDesk.Infrastructure.Data;
+using HelpDesk.Infrastructure.Interceptors;
 using HelpDesk.Infrastructure.Repositories.Implementations.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -69,8 +70,13 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, options) =>
+{
+    var auditInterceptor = serviceProvider.GetRequiredService<HelpDesk.Infrastructure.Interceptors.AuditInterceptor>();
+
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+           .AddInterceptors(auditInterceptor); // <--- HERE IS THE MAGIC!
+});
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -114,6 +120,8 @@ builder.Services.AddScoped<ILookupService, LookupService>();
 // Add this right next to your other service registrations:
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<ISystemSettingService, SystemSettingService>();
+builder.Services.AddScoped<AuditInterceptor>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
 var app = builder.Build();
 

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using HelpDesk.Core.DTOs.Audit;
 using HelpDesk.Core.DTOs.Category;
 using HelpDesk.Core.DTOs.Comment;
 using HelpDesk.Core.DTOs.Department;
@@ -56,6 +57,22 @@ namespace HelpDesk.Core.Mappings
 
             // --- NEW: System Settings Mapping ---
             CreateMap<SystemSetting, SystemSettingDto>().ReverseMap();
+
+            // User mappings
+            CreateMap<ApplicationUser, UserResponseDto>()
+                .ForMember(dest => dest.Role, opt => opt.Ignore())
+                // NEW: Map the DepartmentName so Angular gets a clean string
+                .ForMember(dest => dest.DepartmentName,
+                    opt => opt.MapFrom(src => src.Department != null ? src.Department.Name : "Unassigned"));
+
+            // Audit Mappings
+            CreateMap<AuditDetail, AuditDetailDto>();
+
+            CreateMap<AuditLog, AuditLogResponseDto>()
+                .ForMember(dest => dest.Details, opt => opt.MapFrom(src => src.AuditDetails))
+                // Flatten the user's name from the Navigation property!
+                .ForMember(dest => dest.PerformedByUserName,
+                    opt => opt.MapFrom(src => src.PerformedByUser != null ? src.PerformedByUser.FullName : "System"));
         }
     }
 }

@@ -116,14 +116,14 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 
             await _unitOfWork.Tickets.UpdateAsync(ticket, t => t.Status);
 
-            await _unitOfWork.AuditLogs.LogAsync(
-                tableName: "Tickets",
-                action: "UpdateStatus",
-                performedByUserId: currentUserId,
-                changes: new List<(string, string?, string?)>
-                {
-                    ("Status", oldStatus.ToString(), dto.Status.ToString())
-                });
+            //await _unitOfWork.AuditLogs.LogAsync(
+            //    tableName: "Tickets",
+            //    action: "UpdateStatus",
+            //    performedByUserId: currentUserId,
+            //    changes: new List<(string, string?, string?)>
+            //    {
+            //        ("Status", oldStatus.ToString(), dto.Status.ToString())
+            //    });
 
             await _unitOfWork.SaveChangesAsync();
             return ApiResponse<bool>.Success(true, "Ticket status updated successfully");
@@ -149,15 +149,15 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
                  t => t.Status);
 
             // Audit log
-            await _unitOfWork.AuditLogs.LogAsync(
-                tableName: "Tickets",
-                action: "Assign",
-                performedByUserId: currentUserId,
-                changes: new List<(string, string?, string?)>
-                {
-                    ("AssignedToUserId", oldAgentId, dto.AgentId),
-                    ("Status", "Open", "InProgress")
-                });
+            //await _unitOfWork.AuditLogs.LogAsync(
+            //    tableName: "Tickets",
+            //    action: "Assign",
+            //    performedByUserId: currentUserId,
+            //    changes: new List<(string, string?, string?)>
+            //    {
+            //        ("AssignedToUserId", oldAgentId, dto.AgentId),
+            //        ("Status", "Open", "InProgress")
+            //    });
 
             await _unitOfWork.SaveChangesAsync();
             return ApiResponse<bool>.Success(true, "Ticket assigned successfully");
@@ -185,14 +185,14 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             await _unitOfWork.Tickets.UpdateAsync(ticket, t => t.Priority);
 
     
-            await _unitOfWork.AuditLogs.LogAsync(
-                tableName: "Tickets",
-                action: "UpdatePriority",
-                performedByUserId: currentUserId,
-                changes: new List<(string, string?, string?)>
-                {
-                    ("Priority", oldPriority.ToString(), dto.Priority.ToString())
-                });
+            //await _unitOfWork.AuditLogs.LogAsync(
+            //    tableName: "Tickets",
+            //    action: "UpdatePriority",
+            //    performedByUserId: currentUserId,
+            //    changes: new List<(string, string?, string?)>
+            //    {
+            //        ("Priority", oldPriority.ToString(), dto.Priority.ToString())
+            //    });
 
             await _unitOfWork.SaveChangesAsync();
             return ApiResponse<bool>.Success(true, "Ticket priority updated successfully");

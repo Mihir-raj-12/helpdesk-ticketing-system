@@ -4,6 +4,7 @@ using HelpDesk.Core.DTOs.User;
 using HelpDesk.Core.Entities;
 using HelpDesk.Core.Interfaces;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,7 +39,8 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
                 Email = dto.Email,
                 FullName = dto.FullName, 
                 IsActive = true,
-                CreatedDate = DateTime.UtcNow
+                CreatedDate = DateTime.UtcNow,
+                DepartmentId = dto.DepartmentId
             };
 
             var result = await _userManager.CreateAsync(user, dto.Password);
@@ -59,7 +61,9 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 
         public async Task<ApiResponse<List<UserResponseDto>>> GetAllUserAsync()
         {
-            var users = _userManager.Users.Where(u => u.IsActive).ToList();
+            var users = await _userManager.Users
+                .Include(u=>u.Department)
+                .Where(u => u.IsActive).ToListAsync();
 
             var responseDto = new List<UserResponseDto>();
             foreach (var user in users)
@@ -74,7 +78,8 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 
         public async Task<ApiResponse<UserResponseDto>> GetUserByIdAsync(string id)
         {
-            var user = await _userManager.FindByIdAsync(id);
+            var user = await _userManager.Users.Include(u=>u.DepartmentId).FirstOrDefaultAsync(u => u.Id == id);
+
             if (user == null || !user.IsActive)
                 return ApiResponse<UserResponseDto>.Failure("User not found");
 
@@ -86,6 +91,9 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 
         public async Task<ApiResponse<bool>> UpdateUserRoleAsync(UpdateUserRoleDto dto)
         {
+
+
+
             var user = await _userManager.FindByIdAsync(dto.UserId);
             if (user == null || !user.IsActive)
                 return ApiResponse<bool>.Failure("User not found");
@@ -116,12 +124,17 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             
             var agents = await _userManager.GetUsersInRoleAsync("SupportAgent");
 
-           
-            var activeAgents = agents.Where(a => a.IsActive).ToList();
+            var agentIds = agents.Select(a => a.Id).ToList();
+
+
+            var activeAgentsWithDepts = await _userManager.Users
+        .Include(u => u.Department)
+        .Where(u => agentIds.Contains(u.Id) && u.IsActive)
+        .ToListAsync();
 
           
             var responseDto = new List<UserResponseDto>();
-            foreach (var agent in activeAgents)
+            foreach (var agent in activeAgentsWithDepts)
             {
                 var dto = _mapper.Map<UserResponseDto>(agent);
                 dto.Role = "SupportAgent";

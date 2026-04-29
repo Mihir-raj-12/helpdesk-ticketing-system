@@ -16,7 +16,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 
         public ITicketRepository Tickets { get; private set; }
         public ICommentRepository Comments { get; private set; }
-        public IAuditRepository AuditLogs { get; private set; }
+        public IAuditLogRepository AuditLogs { get; private set; }
         public IGenericRepository<Category> Categories { get; private set; }
         public IGenericRepository<AuditDetail> AuditDetails { get; private set; }
 
@@ -28,7 +28,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             _context = context;
             Tickets = new TicketRepository(_context);
             Comments = new CommentRepository(_context);
-            AuditLogs = new AuditRepository(_context);
+            AuditLogs = new AuditLogRepository(_context);
             Categories = new GenericRepository<Category>(_context);
             AuditDetails = new GenericRepository<AuditDetail>(_context);
             Departments = new DepartmentRepository(_context);

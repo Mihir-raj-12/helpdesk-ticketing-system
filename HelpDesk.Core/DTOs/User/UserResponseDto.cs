@@ -14,5 +14,8 @@ namespace HelpDesk.Core.DTOs.User
         public string Role { get; set; } = string.Empty;
         public bool IsActive { get; set; }
         public DateTime CreatedDate { get; set; }
+
+        public int DepartmentId { get; set; }
+        public string DepartmentName { get; set; } = string.Empty;
     }
 }

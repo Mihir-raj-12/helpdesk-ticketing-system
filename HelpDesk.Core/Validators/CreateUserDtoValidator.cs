@@ -25,6 +25,9 @@ namespace HelpDesk.Core.Validators
             RuleFor(x => x.Role.ToString())
                .IsEnumName(typeof(UserRole), caseSensitive: false)
                 .WithMessage("Invalid User Role selected.");
+            RuleFor(x => x.DepartmentId)
+                .GreaterThan(0);
+
         }
     }
 }

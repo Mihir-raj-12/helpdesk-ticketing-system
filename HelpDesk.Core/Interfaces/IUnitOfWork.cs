@@ -13,11 +13,10 @@ namespace HelpDesk.Core.Interfaces
     {
         ITicketRepository Tickets { get; }
         ICommentRepository Comments { get; }
-        IAuditRepository AuditLogs { get; }
+        IAuditLogRepository AuditLogs { get; }
         IGenericRepository<Category> Categories { get; }
         IGenericRepository<AuditDetail> AuditDetails { get; }
         Task<int> SaveChangesAsync();
-
         IDepartmentRepository Departments { get; }
         IGenericRepository<SystemSetting> SystemSettings { get; }
     }
