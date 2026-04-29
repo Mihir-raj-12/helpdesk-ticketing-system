@@ -103,20 +103,23 @@ namespace HelpDesk.Infrastructure.Data
             // --- SEED DATA ---
 
             // PRD Rule: The 'General' department must always exist as a fallback
+            // PRD Rule: The 'General' department must always exist as a fallback
             builder.Entity<Department>().HasData(
                 new Department
                 {
                     Id = 1,
                     Name = "General",
                     IsActive = true,
-                    DepartmentHeadId = null
+                    DepartmentHeadId = null,
+                    // NEW: Required by BaseEntity
+                    CreatedDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    LastUpdatedDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 }
             );
 
 
             // --- SYSTEM SETTINGS SEED ---
-            builder.Entity<SystemSetting>().HasKey(s => s.Id);
-
+            // --- SYSTEM SETTINGS SEED ---
             builder.Entity<SystemSetting>().HasData(
                 new SystemSetting
                 {
@@ -129,7 +132,11 @@ namespace HelpDesk.Infrastructure.Data
                     SlaCriticalResolutionHours = 4,
                     SlaHighResolutionHours = 8,
                     SlaMediumResolutionHours = 24,
-                    SlaLowResolutionHours = 40
+                    SlaLowResolutionHours = 40,
+                    IsActive = true,
+                    // NEW: Required by BaseEntity
+                    CreatedDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    LastUpdatedDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 }
             );
         }

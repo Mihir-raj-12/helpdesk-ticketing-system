@@ -20,6 +20,9 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
         public IGenericRepository<Category> Categories { get; private set; }
         public IGenericRepository<AuditDetail> AuditDetails { get; private set; }
 
+        public IDepartmentRepository Departments { get; private set; }
+        public IGenericRepository<SystemSetting> SystemSettings { get; private set; }
+
         public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
@@ -28,6 +31,8 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             AuditLogs = new AuditRepository(_context);
             Categories = new GenericRepository<Category>(_context);
             AuditDetails = new GenericRepository<AuditDetail>(_context);
+            Departments = new DepartmentRepository(_context);
+            SystemSettings = new GenericRepository<SystemSetting>(_context);
         }
 
         public async Task<int> SaveChangesAsync()
@@ -39,5 +44,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
         {
             _context.Dispose();
         }
+
+       
     }
 }

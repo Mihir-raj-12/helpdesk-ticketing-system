@@ -17,5 +17,8 @@ namespace HelpDesk.Core.Interfaces
         IGenericRepository<Category> Categories { get; }
         IGenericRepository<AuditDetail> AuditDetails { get; }
         Task<int> SaveChangesAsync();
+
+        IDepartmentRepository Departments { get; }
+        IGenericRepository<SystemSetting> SystemSettings { get; }
     }
 }

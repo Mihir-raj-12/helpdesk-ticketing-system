@@ -1,4 +1,5 @@
-﻿using HelpDesk.Core.Common;
+﻿using AutoMapper;
+using HelpDesk.Core.Common;
 using HelpDesk.Core.DTOs.Settings;
 using HelpDesk.Core.Interfaces;
 using HelpDesk.Infrastructure.Data;
@@ -16,57 +17,38 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
     public class SystemSettingService : ISystemSettingService
     {
 
-        private readonly ApplicationDbContext _context;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public SystemSettingService(ApplicationDbContext context)
+        public SystemSettingService(IUnitOfWork unitOfWork, IMapper mapper)
         {
-            _context = context;
+            _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
+
         public async Task<ApiResponse<SystemSettingDto>> GetSettingsAsync()
         {
-            var settings = await _context.SystemSettings.FirstOrDefaultAsync(s=>s.Id == 1);
-            if(settings  == null)
-            {
-                return ApiResponse<SystemSettingDto>.Failure("Settings not found");
-            }
+            // Using GenericRepository's GetByIdAsync to fetch the single row (Id = 1)
+            var settings = await _unitOfWork.SystemSettings.GetByIdAsync(1);
+            if (settings == null) return ApiResponse<SystemSettingDto>.Failure("Settings not found.");
 
-            var dto = new SystemSettingDto
-            {
-                SystemName = settings.SystemName,
-                SupportEmailAddress = settings.SupportEmailAddress,
-                BusinessHourStart = settings.BusinessHourStart,
-                BusinessHourEnd = settings.BusinessHourEnd,
-                WorkingDays = settings.WorkingDays,
-                SlaCriticalResolutionHours = settings.SlaCriticalResolutionHours,
-                SlaHighResolutionHours = settings.SlaHighResolutionHours,
-                SlaMediumResolutionHours = settings.SlaMediumResolutionHours,
-                SlaLowResolutionHours = settings.SlaLowResolutionHours
-            };
+            var dto = _mapper.Map<SystemSettingDto>(settings);
             return ApiResponse<SystemSettingDto>.Success(dto);
-
         }
 
         public async Task<ApiResponse<SystemSettingDto>> UpdateSettingsAsync(SystemSettingDto dto)
         {
-            var settings = await _context.SystemSettings.FirstOrDefaultAsync(s => s.Id == 1);
+            var settings = await _unitOfWork.SystemSettings.GetByIdAsync(1);
+            if (settings == null) return ApiResponse<SystemSettingDto>.Failure("Settings not found.");
 
-            if (settings == null)
-                return ApiResponse<SystemSettingDto>.Failure("System settings not found.");
+            // Map incoming DTO over the existing entity
+            _mapper.Map(dto, settings);
 
-            // Overwrite the single row
-            settings.SystemName = dto.SystemName;
-            settings.SupportEmailAddress = dto.SupportEmailAddress;
-            settings.BusinessHourStart = dto.BusinessHourStart;
-            settings.BusinessHourEnd = dto.BusinessHourEnd;
-            settings.WorkingDays = dto.WorkingDays;
-            settings.SlaCriticalResolutionHours = dto.SlaCriticalResolutionHours;
-            settings.SlaHighResolutionHours = dto.SlaHighResolutionHours;
-            settings.SlaMediumResolutionHours = dto.SlaMediumResolutionHours;
-            settings.SlaLowResolutionHours = dto.SlaLowResolutionHours;
+            // Using your GenericRepository UpdateAsync!
+            await _unitOfWork.SystemSettings.UpdateAsync(settings);
+            await _unitOfWork.SaveChangesAsync();
 
-            await _context.SaveChangesAsync();
-
-            return ApiResponse<SystemSettingDto>.Success(dto, "System settings updated successfully.");
+            return ApiResponse<SystemSettingDto>.Success(dto, "Settings updated successfully.");
         }
     }
 }

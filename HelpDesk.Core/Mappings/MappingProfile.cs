@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using HelpDesk.Core.DTOs.Category;
 using HelpDesk.Core.DTOs.Comment;
+using HelpDesk.Core.DTOs.Department;
+using HelpDesk.Core.DTOs.Settings;
 using HelpDesk.Core.DTOs.Ticket;
 using HelpDesk.Core.DTOs.User;
 using HelpDesk.Core.Entities;
@@ -42,6 +44,18 @@ namespace HelpDesk.Core.Mappings
                 .ForMember(dest => dest.WrittenByUserName,
                     opt => opt.MapFrom(src => src.User.FullName));
             CreateMap<CreateCommentDto, Comment>();
+
+            // --- NEW: Department Mappings ---
+            CreateMap<Department, DepartmentResponseDto>()
+                .ForMember(dest => dest.DepartmentHeadName,
+                    opt => opt.MapFrom(src => src.DepartmentHead != null ? src.DepartmentHead.FullName : "Unassigned"))
+                .ForMember(dest => dest.ActiveUserCount,
+                    opt => opt.MapFrom(src => src.Users.Count(u => u.IsActive)));
+
+            CreateMap<CreateDepartmentDto, Department>();
+
+            // --- NEW: System Settings Mapping ---
+            CreateMap<SystemSetting, SystemSettingDto>().ReverseMap();
         }
     }
 }

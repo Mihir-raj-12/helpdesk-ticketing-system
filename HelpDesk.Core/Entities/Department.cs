@@ -8,15 +8,13 @@ using System.Threading.Tasks;
 
 namespace HelpDesk.Core.Entities
 {
-    public class Department
+    public class Department : BaseEntity
     {
-        public int Id { get; set; }
+       
 
         [Required]
         [MaxLength(100)]
         public string Name { get; set; } = string.Empty;
-
-        public bool IsActive { get; set; } = true;
 
         public string? DepartmentHeadId { get; set; }
 

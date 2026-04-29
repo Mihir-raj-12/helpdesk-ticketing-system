@@ -7,9 +7,8 @@ using System.Threading.Tasks;
 
 namespace HelpDesk.Core.Entities
 {
-    public class SystemSetting
+    public class SystemSetting : BaseEntity
     {
-        public int Id { get; set; }
 
         [Required]
         [MaxLength(100)]
