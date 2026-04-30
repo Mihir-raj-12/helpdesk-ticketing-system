@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -25,6 +26,9 @@ namespace HelpDesk.Infrastructure.Data
         public DbSet<Department> Departments { get; set; }
 
         public DbSet<SystemSetting> SystemSettings { get; set; }
+
+        public DbSet<SlaConfig> SlaConfigs { get; set; }
+        public DbSet<PublicHoliday> PublicHolidays { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -126,17 +130,58 @@ namespace HelpDesk.Infrastructure.Data
                     Id = 1,
                     SystemName = "Help Desk Ticket Management System",
                     SupportEmailAddress = "helpdesk@company.com",
-                    BusinessHourStart = new TimeSpan(9, 0, 0),
-                    BusinessHourEnd = new TimeSpan(17, 0, 0),
+                    BusinessHourStart = new TimeSpan(11, 30, 0), 
+                    BusinessHourEnd = new TimeSpan(20, 30, 0),
                     WorkingDays = "Monday,Tuesday,Wednesday,Thursday,Friday",
-                    SlaCriticalResolutionHours = 4,
-                    SlaHighResolutionHours = 8,
-                    SlaMediumResolutionHours = 24,
-                    SlaLowResolutionHours = 40,
                     IsActive = true,
                     // NEW: Required by BaseEntity
                     CreatedDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                     LastUpdatedDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                }
+            );
+
+            // PRD 6.2 Default SLA Targets Seed Data
+            // Note: Assuming an 8-hour business day. 3 business days = 24 hrs. 5 business days = 40 hrs.
+            builder.Entity<SlaConfig>().HasData(
+                new SlaConfig
+                {
+                    Id = 1,
+                    Priority = HelpDesk.Core.Enums.TicketPriority.Low,
+                    FirstResponseHours = 8,  // 1 business day
+                    ResolutionHours = 40,    // 5 business days
+                    WarningThresholdPercent = 75,
+                    CreatedDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    IsActive = true
+                },
+                new SlaConfig
+                {
+                    Id = 2,
+                    Priority = HelpDesk.Core.Enums.TicketPriority.Medium,
+                    FirstResponseHours = 8,
+                    ResolutionHours = 24,    // 3 business days
+                    WarningThresholdPercent = 75,
+                    CreatedDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    IsActive = true
+                },
+                new SlaConfig
+                {
+                    Id = 3,
+                    Priority = HelpDesk.Core.Enums.TicketPriority.High,
+                    FirstResponseHours = 4,
+                    ResolutionHours = 8,
+                    WarningThresholdPercent = 75,
+                    CreatedDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    IsActive = true
+                },
+                new SlaConfig
+                {
+                    Id = 4,
+                    Priority = HelpDesk.Core.Enums.TicketPriority.Critical,
+                    FirstResponseHours = 1,
+                    ResolutionHours = 4,
+                    WarningThresholdPercent = 75,
+                    CreatedDate = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                    IsActive = true
                 }
             );
         }

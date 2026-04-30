@@ -23,6 +23,9 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
         public IDepartmentRepository Departments { get; private set; }
         public IGenericRepository<SystemSetting> SystemSettings { get; private set; }
 
+        public IGenericRepository<PublicHoliday> PublicHolidays { get; private set; }
+        public IGenericRepository<SlaConfig> SlaConfigs { get; private set; }
+
         public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
@@ -33,6 +36,8 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             AuditDetails = new GenericRepository<AuditDetail>(_context);
             Departments = new DepartmentRepository(_context);
             SystemSettings = new GenericRepository<SystemSetting>(_context);
+            PublicHolidays = new GenericRepository<PublicHoliday>(_context);
+            SlaConfigs = new GenericRepository<SlaConfig>(_context);
         }
 
         public async Task<int> SaveChangesAsync()

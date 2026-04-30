@@ -17,12 +17,14 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
         private readonly IMapper _mapper;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICurrentUserProvider _currentUserProvider;
+        private readonly ISlaCalculatorService _slaCalculator;
 
-        public TicketService (IMapper mapper, IUnitOfWork unitOfWork , ICurrentUserProvider currentUserProvider)
+        public TicketService (IMapper mapper, IUnitOfWork unitOfWork , ICurrentUserProvider currentUserProvider , ISlaCalculatorService slaCalculator)
         {
             _mapper = mapper;
             _unitOfWork = unitOfWork;
             _currentUserProvider = currentUserProvider;
+            _slaCalculator = slaCalculator;
         }
 
 
@@ -35,6 +37,25 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             ticket.Status = TicketStatus.Open;
 
             ticket.RaisedByUserId = !string.IsNullOrEmpty(dto.RaisedForUserId) ? dto.RaisedForUserId : currentUserId;
+
+            // --- NEW: SLA DEADLINE CALCULATION ---
+
+            // 1. Get all SLA configurations from the database
+            var slaConfigs = await _unitOfWork.SlaConfigs.GetAllAsync();
+
+            // 2. Find the specific rule for this ticket's priority
+            var config = slaConfigs.FirstOrDefault(c => c.Priority == ticket.Priority);
+
+            if (config != null)
+            {
+                // 3. Run the math engine to find out exactly when this ticket breaches!
+                ticket.SlaDeadline = await _slaCalculator.CalculateDeadlineAsync(DateTime.UtcNow, config.ResolutionHours);
+            }
+            else
+            {
+                // Fallback safety net (just in case the SlaConfig table is empty)
+                ticket.SlaDeadline = DateTime.UtcNow.AddHours(24);
+            }
 
             await _unitOfWork.Tickets.AddAsync(ticket);
             await _unitOfWork.SaveChangesAsync(); 

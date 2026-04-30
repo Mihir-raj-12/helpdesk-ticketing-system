@@ -35,5 +35,11 @@ namespace HelpDesk.Core.Entities
 
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
 
+        // Add these inside your Ticket class
+        public DateTime SlaDeadline { get; set; }
+
+        // PRD Section 3 & 10: Marks whether the ticket has been formally escalated
+        public bool EscalationFlag { get; set; } = false;
+
     }
 }

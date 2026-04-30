@@ -19,5 +19,7 @@ namespace HelpDesk.Core.Interfaces
         Task<int> SaveChangesAsync();
         IDepartmentRepository Departments { get; }
         IGenericRepository<SystemSetting> SystemSettings { get; }
+        IGenericRepository<PublicHoliday> PublicHolidays { get; }
+        IGenericRepository<SlaConfig> SlaConfigs { get; }
     }
 }

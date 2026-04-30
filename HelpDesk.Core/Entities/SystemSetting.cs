@@ -25,10 +25,6 @@ namespace HelpDesk.Core.Entities
         [Required]
         public string WorkingDays { get; set; } = "Monday,Tuesday,Wednesday,Thursday,Friday";
 
-        // SLA Resolution Targets (in Hours)
-        public int SlaCriticalResolutionHours { get; set; } = 4;
-        public int SlaHighResolutionHours { get; set; } = 8;
-        public int SlaMediumResolutionHours { get; set; } = 24; // 3 business days (assuming 8hr days)
-        public int SlaLowResolutionHours { get; set; } = 40;  // 5 business days
+       
     }
 }

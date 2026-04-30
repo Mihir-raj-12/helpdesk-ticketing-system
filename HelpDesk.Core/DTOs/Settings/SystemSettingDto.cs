@@ -22,9 +22,5 @@ namespace HelpDesk.Core.DTOs.Settings
         [Required]
         public string WorkingDays { get; set; } = string.Empty;
 
-        public int SlaCriticalResolutionHours { get; set; }
-        public int SlaHighResolutionHours { get; set; }
-        public int SlaMediumResolutionHours { get; set; }
-        public int SlaLowResolutionHours { get; set; }
     }
 }

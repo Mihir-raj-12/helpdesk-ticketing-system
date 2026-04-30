@@ -15,7 +15,6 @@ namespace HelpDesk.Core.Validators
             RuleFor(x => x.SystemName).NotEmpty();
             RuleFor(x => x.SupportEmailAddress).NotEmpty().EmailAddress();
             RuleFor(x => x.WorkingDays).NotEmpty();
-            RuleFor(x => x.SlaCriticalResolutionHours).GreaterThan(0);
         }
     }
 }
