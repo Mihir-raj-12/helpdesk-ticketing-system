@@ -73,6 +73,8 @@ namespace HelpDesk.Core.Mappings
                 // Flatten the user's name from the Navigation property!
                 .ForMember(dest => dest.PerformedByUserName,
                     opt => opt.MapFrom(src => src.PerformedByUser != null ? src.PerformedByUser.FullName : "System"));
+
+            CreateMap<SlaConfig, SlaConfigDto>().ReverseMap();
         }
     }
 }

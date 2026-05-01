@@ -109,6 +109,32 @@ namespace HelpDesk.API.Controllers
 
         }
 
+        [HttpPost("escalate")]
+        [Authorize(Roles = "Admin,SupportAgent")] // Users cannot escalate their own tickets!
+        public async Task<IActionResult> EscalateTicket([FromQuery] int id, [FromBody] EscalateTicketDto dto)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            // Grab the user ID from the JWT token
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+            var response = await _ticketService.EscalateTicketAsync(id, dto.Reason, userId);
+            if (!response.IsSuccess) return BadRequest(response);
+
+            return Ok(response);
+        }
+
+        [HttpPost("acknowledge-escalation")]
+        [Authorize(Roles = "Admin")] // PRD limits acknowledgment strictly to Admins
+        public async Task<IActionResult> AcknowledgeEscalation([FromQuery] int id)
+        {
+            var response = await _ticketService.AcknowledgeEscalationAsync(id);
+            if (!response.IsSuccess) return BadRequest(response);
+
+            return Ok(response);
+        }
+
     }
 
 

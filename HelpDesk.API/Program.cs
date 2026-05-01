@@ -123,6 +123,7 @@ builder.Services.AddScoped<ISystemSettingService, SystemSettingService>();
 builder.Services.AddScoped<AuditInterceptor>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<ISlaCalculatorService, SlaCalculatorService>();
+builder.Services.AddScoped<ISlaConfigService, SlaConfigService>();
 
 var app = builder.Build();
 

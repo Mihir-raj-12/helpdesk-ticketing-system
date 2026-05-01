@@ -16,5 +16,8 @@ namespace HelpDesk.Core.Interfaces
         Task<ApiResponse<bool>> UpdateTicketStatusAsync(UpdateTicketStatusDto dto);
         Task<ApiResponse<bool>> AssignTicketAsync(AssignTicketDto dto);
         Task<ApiResponse<bool>> UpdateTicketPriorityAsync(UpdateTicketPriorityDto dto);
+
+        Task<ApiResponse<TicketResponseDto>> EscalateTicketAsync(int ticketId, string reason, string currentUserId);
+        Task<ApiResponse<TicketResponseDto>> AcknowledgeEscalationAsync(int ticketId);
     }
 }

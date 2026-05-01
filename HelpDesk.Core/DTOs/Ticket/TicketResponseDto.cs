@@ -19,5 +19,9 @@ namespace HelpDesk.Core.DTOs.Ticket
         public string? AssignedToUserName { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime LastUpdatedDate { get; set; }
+
+        // Add these to your TicketResponseDto class
+        public DateTime SlaDeadline { get; set; }
+        public bool EscalationFlag { get; set; }
     }
 }

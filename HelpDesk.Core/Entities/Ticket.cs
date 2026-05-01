@@ -41,5 +41,9 @@ namespace HelpDesk.Core.Entities
         // PRD Section 3 & 10: Marks whether the ticket has been formally escalated
         public bool EscalationFlag { get; set; } = false;
 
+        // PRD Section 10: Escalation Tracking
+        public string? EscalationReason { get; set; }
+        public DateTime? EscalatedAt { get; set; }
+        public DateTime? EscalationAcknowledgedAt { get; set; }
     }
 }
