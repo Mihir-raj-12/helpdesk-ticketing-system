@@ -26,6 +26,9 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
         public IGenericRepository<PublicHoliday> PublicHolidays { get; private set; }
         public IGenericRepository<SlaConfig> SlaConfigs { get; private set; }
 
+        public IGenericRepository<KbArticle> KbArticles { get; private set; }
+        public IGenericRepository<KbArticleVersion> KbArticleVersions { get; private set; }
+
         public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
@@ -38,6 +41,8 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             SystemSettings = new GenericRepository<SystemSetting>(_context);
             PublicHolidays = new GenericRepository<PublicHoliday>(_context);
             SlaConfigs = new GenericRepository<SlaConfig>(_context);
+            KbArticles = new GenericRepository<KbArticle>(_context);
+            KbArticleVersions = new GenericRepository<KbArticleVersion>(_context);
         }
 
         public async Task<int> SaveChangesAsync()

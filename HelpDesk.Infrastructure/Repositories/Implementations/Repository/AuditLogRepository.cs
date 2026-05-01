@@ -23,5 +23,14 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Repository
                 .Take(count)
                 .ToListAsync();
         }
+        public async Task<IEnumerable<AuditLog>> GetLogsByDateRangeAsync(DateTime startDate, DateTime endDate)
+        {
+            return await _dbSet
+                .Include(a => a.AuditDetails)
+                .Include(a => a.PerformedByUser)
+                .Where(a => a.PerformedAt >= startDate && a.PerformedAt <= endDate)
+                .OrderByDescending(a => a.PerformedAt)
+                .ToListAsync();
+        }
     }
 }

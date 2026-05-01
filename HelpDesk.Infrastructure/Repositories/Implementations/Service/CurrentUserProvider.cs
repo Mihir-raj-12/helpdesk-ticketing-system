@@ -27,5 +27,10 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
         {
             return _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Role)?.Value;
         }
+
+        public string? GetClientIpAddress()
+        {
+            return _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+        }
     }
 }

@@ -27,7 +27,8 @@ namespace HelpDesk.Infrastructure.Interceptors
             var context = eventData.Context;
             if (context == null) return base.SavingChangesAsync(eventData, result, cancellationToken);
 
-            var userId = _currentUserProvider.GetCurrentUserId() ?? "System";
+            var userId = _currentUserProvider.GetCurrentUserId();
+            var ipAddress = _currentUserProvider.GetClientIpAddress() ?? "System/Unknown";
             var auditEntries = new List<AuditLog>();
 
             // Look at everything EF Core is about to save
@@ -39,16 +40,29 @@ namespace HelpDesk.Infrastructure.Interceptors
 
             foreach (var entry in entries)
             {
-                // We do NOT want to audit the Audit tables themselves (Infinite loop!)
+                // --- STEP 1: THE SECURITY BLOCK (PRD 8.3) ---
                 if (entry.Entity is AuditLog || entry.Entity is AuditDetail)
+                {
+                    // If someone tries to edit or delete an audit record, crash the transaction!
+                    if (entry.State == EntityState.Modified || entry.State == EntityState.Deleted)
+                    {
+                        throw new InvalidOperationException("SECURITY EXCEPTION: Audit records are strictly append-only. Modifying or deleting them is a violation of PRD 8.3.");
+                    }
+
+                    // If it's just being Added (EntityState.Added), let it pass through.
                     continue;
+                }
 
                 var tableName = entry.Entity.GetType().Name;
                 var action = entry.State.ToString(); // "Added", "Modified", or "Deleted"
+                var primaryKeyProperty = entry.Properties.FirstOrDefault(p => p.Metadata.IsPrimaryKey());
+                var entityId = primaryKeyProperty?.CurrentValue?.ToString() ?? "Unknown";
 
                 var auditLog = new AuditLog
                 {
                     TableName = tableName,
+                    EntityId = entityId,    // NEW
+                    IpAddress = ipAddress,  // NEW
                     Action = action,
                     PerformedByUserId = userId,
                     PerformedAt = DateTime.UtcNow,

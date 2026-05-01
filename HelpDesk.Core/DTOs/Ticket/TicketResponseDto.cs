@@ -23,5 +23,8 @@ namespace HelpDesk.Core.DTOs.Ticket
         // Add these to your TicketResponseDto class
         public DateTime SlaDeadline { get; set; }
         public bool EscalationFlag { get; set; }
+
+        public string? EscalationReason { get; set; }
+        public DateTime? EscalatedAt { get; set; }
     }
 }

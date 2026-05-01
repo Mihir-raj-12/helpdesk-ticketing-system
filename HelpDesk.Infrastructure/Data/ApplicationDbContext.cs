@@ -30,6 +30,9 @@ namespace HelpDesk.Infrastructure.Data
         public DbSet<SlaConfig> SlaConfigs { get; set; }
         public DbSet<PublicHoliday> PublicHolidays { get; set; }
 
+        public DbSet<KbArticle> KbArticles { get; set; }
+        public DbSet<KbArticleVersion> KbArticleVersions { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -184,6 +187,33 @@ namespace HelpDesk.Infrastructure.Data
                     IsActive = true
                 }
             );
+
+            // --- KNOWLEDGE BASE RELATIONSHIPS ---
+
+            // 1. Primary Keys
+            builder.Entity<KbArticle>().HasKey(k => k.Id);
+            builder.Entity<KbArticleVersion>().HasKey(kv => kv.Id);
+
+            // 2. An Article belongs to ONE Category
+            builder.Entity<KbArticle>()
+                .HasOne(k => k.Category)
+                .WithMany() // We don't necessarily need a list of articles on the Category model
+                .HasForeignKey(k => k.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // 3. A Version belongs to ONE Article
+            builder.Entity<KbArticleVersion>()
+                .HasOne(kv => kv.KbArticle)
+                .WithMany()
+                .HasForeignKey(kv => kv.KbArticleId)
+                .OnDelete(DeleteBehavior.Cascade); // If the Admin deletes the main article, delete its history too
+
+            // 4. A Version is saved by ONE User (Author/Editor)
+            builder.Entity<KbArticleVersion>()
+                .HasOne(kv => kv.SavedByUser)
+                .WithMany()
+                .HasForeignKey(kv => kv.SavedByUserId)
+                .OnDelete(DeleteBehavior.Restrict); // NEVER delete a user just because an article version is deleted!
         }
     }
 }

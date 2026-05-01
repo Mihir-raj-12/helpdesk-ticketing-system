@@ -12,5 +12,7 @@ namespace HelpDesk.Core.Interfaces
         // Notice there is no LogAsync here anymore! 
         // We only need to READ the data, the Interceptor writes it.
         Task<IEnumerable<AuditLog>> GetRecentAuditLogsAsync(int count = 100);
+
+        Task<IEnumerable<AuditLog>> GetLogsByDateRangeAsync(DateTime startDate, DateTime endDate);
     }
 }

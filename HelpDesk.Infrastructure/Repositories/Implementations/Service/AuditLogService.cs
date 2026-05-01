@@ -31,5 +31,30 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 
             return ApiResponse<IEnumerable<AuditLogResponseDto>>.Success(responseDto);
         }
+
+        public async Task<byte[]> ExportLogsToCsvAsync(DateTime startDate, DateTime endDate)
+        {
+            var logs = await _unitOfWork.AuditLogs.GetLogsByDateRangeAsync(startDate, endDate);
+
+            var sb = new StringBuilder();
+
+            // 1. Write the CSV Header row (PRD 8.3 required fields)
+            sb.AppendLine("Timestamp (UTC),Actor Name,Action Type,Entity Type,Entity ID,IP Address,Changes");
+
+            // 2. Loop through the logs and write the data rows
+            foreach (var log in logs)
+            {
+                var actorName = log.PerformedByUser != null ? log.PerformedByUser.FullName : "System";
+
+                // Flatten the Audit Details into a single readable string for the CSV cell
+                var changes = string.Join(" | ", log.AuditDetails.Select(d => $"{d.FieldName}: '{d.OldValue}' -> '{d.NewValue}'"));
+
+                // Use quotes around fields that might contain commas (like our changes string)
+                sb.AppendLine($"{log.PerformedAt:yyyy-MM-dd HH:mm:ss},{actorName},{log.Action},{log.TableName},{log.EntityId},{log.IpAddress},\"{changes}\"");
+            }
+
+            // 3. Convert the string into a UTF-8 byte array so it can be downloaded
+            return Encoding.UTF8.GetBytes(sb.ToString());
+        }
     }
 }

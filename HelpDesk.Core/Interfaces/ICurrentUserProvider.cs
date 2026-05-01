@@ -10,5 +10,7 @@ namespace HelpDesk.Core.Interfaces
     {
         string? GetCurrentUserId();
         string? GetCurrentUserRole();
+
+        string? GetClientIpAddress();
     }
 }

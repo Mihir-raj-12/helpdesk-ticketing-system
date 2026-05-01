@@ -11,5 +11,7 @@ namespace HelpDesk.Core.Interfaces
     public interface IAuditLogService
     {
         Task<ApiResponse<IEnumerable<AuditLogResponseDto>>> GetRecentLogsAsync();
+
+        Task<byte[]> ExportLogsToCsvAsync(DateTime startDate, DateTime endDate);
     }
 }

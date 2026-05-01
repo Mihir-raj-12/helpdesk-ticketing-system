@@ -4,6 +4,7 @@ using HelpDesk.Core.Entities;
 using HelpDesk.Core.Interfaces;
 using HelpDesk.Core.Mappings;
 using HelpDesk.Core.Validators;
+using HelpDesk.Infrastructure.BackgroundJobs;
 using HelpDesk.Infrastructure.Data;
 using HelpDesk.Infrastructure.Interceptors;
 using HelpDesk.Infrastructure.Repositories.Implementations.Service;
@@ -124,6 +125,9 @@ builder.Services.AddScoped<AuditInterceptor>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<ISlaCalculatorService, SlaCalculatorService>();
 builder.Services.AddScoped<ISlaConfigService, SlaConfigService>();
+builder.Services.AddScoped<IKbArticleService, KbArticleService>();
+// Register the background worker
+builder.Services.AddHostedService<AutoEscalationWorker>();
 
 var app = builder.Build();
 

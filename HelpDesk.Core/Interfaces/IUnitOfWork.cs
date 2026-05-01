@@ -21,5 +21,8 @@ namespace HelpDesk.Core.Interfaces
         IGenericRepository<SystemSetting> SystemSettings { get; }
         IGenericRepository<PublicHoliday> PublicHolidays { get; }
         IGenericRepository<SlaConfig> SlaConfigs { get; }
+
+        IGenericRepository<KbArticle> KbArticles { get; }
+        IGenericRepository<KbArticleVersion> KbArticleVersions { get; }
     }
 }

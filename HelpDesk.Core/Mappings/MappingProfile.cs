@@ -3,6 +3,7 @@ using HelpDesk.Core.DTOs.Audit;
 using HelpDesk.Core.DTOs.Category;
 using HelpDesk.Core.DTOs.Comment;
 using HelpDesk.Core.DTOs.Department;
+using HelpDesk.Core.DTOs.KnowledgeBase;
 using HelpDesk.Core.DTOs.Settings;
 using HelpDesk.Core.DTOs.Ticket;
 using HelpDesk.Core.DTOs.User;
@@ -75,6 +76,14 @@ namespace HelpDesk.Core.Mappings
                     opt => opt.MapFrom(src => src.PerformedByUser != null ? src.PerformedByUser.FullName : "System"));
 
             CreateMap<SlaConfig, SlaConfigDto>().ReverseMap();
+
+            // Knowledge Base Mappings
+            CreateMap<CreateKbArticleDto, KbArticle>();
+            CreateMap<UpdateKbArticleDto, KbArticle>();
+
+            // Notice we map the Category.Name directly to the CategoryName string property!
+            CreateMap<KbArticle, KbArticleResponseDto>()
+                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : "Unknown"));
         }
     }
 }

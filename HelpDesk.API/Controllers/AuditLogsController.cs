@@ -27,5 +27,21 @@ namespace HelpDesk.API.Controllers
 
             return Ok(response);
         }
+
+        [HttpGet("export")]
+        public async Task<IActionResult> ExportCsv([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+        {
+            // Basic validation
+            if (startDate > endDate)
+                return BadRequest("Start date cannot be after end date.");
+
+            var fileBytes = await _auditLogService.ExportLogsToCsvAsync(startDate, endDate);
+
+            // Generate a dynamic filename based on the current date
+            var fileName = $"AuditLogs_{DateTime.UtcNow:yyyyMMdd}.csv";
+
+            // Return it as a downloadable CSV file
+            return File(fileBytes, "text/csv", fileName);
+        }
     }
 }
