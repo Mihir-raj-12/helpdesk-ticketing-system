@@ -33,6 +33,7 @@ namespace HelpDesk.Infrastructure.Data
         public DbSet<KbArticle> KbArticles { get; set; }
         public DbSet<KbArticleVersion> KbArticleVersions { get; set; }
 
+        public DbSet<RecurringTicket> RecurringTickets { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

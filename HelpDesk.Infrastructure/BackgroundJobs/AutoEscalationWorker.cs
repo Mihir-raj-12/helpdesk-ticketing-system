@@ -63,6 +63,7 @@ namespace HelpDesk.Infrastructure.BackgroundJobs
 
                 ticket.EscalationFlag = true;
                 ticket.EscalationReason = "System Auto-Escalation"; // PRD 10.4 Requirement
+                ticket.EscalatedAt = DateTime.UtcNow; // <-- The missing piece!
                 ticket.LastUpdatedDate = DateTime.UtcNow;
 
                 // PRD 10.3: Automatically raise the priority to the next level

@@ -128,6 +128,7 @@ builder.Services.AddScoped<ISlaConfigService, SlaConfigService>();
 builder.Services.AddScoped<IKbArticleService, KbArticleService>();
 // Register the background worker
 builder.Services.AddHostedService<AutoEscalationWorker>();
+builder.Services.AddHostedService<RecurringTicketWorker>();
 
 var app = builder.Build();
 
