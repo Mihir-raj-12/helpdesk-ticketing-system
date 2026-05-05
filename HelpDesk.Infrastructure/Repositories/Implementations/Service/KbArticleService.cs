@@ -30,6 +30,10 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             var article = await _unitOfWork.KbArticles.GetByIdAsync(id);
             if (article == null) return ApiResponse<KbArticleResponseDto>.Failure("Article not found.");
 
+
+            article.ViewCount += 1;
+            await _unitOfWork.KbArticles.UpdateAsync(article);
+            await _unitOfWork.SaveChangesAsync();
             // Optionally, you might want to load the Category name here using a custom repository method later,
             // but for now AutoMapper will handle the basic mapping.
             var responseDto = _mapper.Map<KbArticleResponseDto>(article);
@@ -116,6 +120,64 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 
             var responseDto = _mapper.Map<KbArticleResponseDto>(existingArticle);
             return ApiResponse<KbArticleResponseDto>.Success(responseDto, $"Article updated to Version {existingArticle.VersionNumber}.");
+        }
+
+        public async Task<ApiResponse<bool>> SubmitFeedbackAsync(int id, bool isHelpful)
+        {
+            var article = await _unitOfWork.KbArticles.GetByIdAsync(id);
+            if (article == null) return ApiResponse<bool>.Failure("Article not found.");
+
+            // --- NEW: Increment the correct feedback counter ---
+            if (isHelpful)
+            {
+                article.HelpfulCount += 1;
+            }
+            else
+            {
+                article.NotHelpfulCount += 1;
+            }
+
+            await _unitOfWork.KbArticles.UpdateAsync(article);
+            await _unitOfWork.SaveChangesAsync();
+
+            return ApiResponse<bool>.Success(true, "Feedback recorded successfully.");
+        }
+
+        public async Task<ApiResponse<IEnumerable<KbArticleResponseDto>>> SearchArticlesAsync(string keyword)
+        {
+            if (string.IsNullOrWhiteSpace(keyword))
+                return ApiResponse<IEnumerable<KbArticleResponseDto>>.Failure("Search keyword cannot be empty.");
+
+            var lowerKeyword = keyword.ToLower();
+
+            // 1. Fetch all published articles (Drafts should never appear in search results!)
+            var allArticles = await _unitOfWork.KbArticles.GetAllAsync();
+            var publishedArticles = allArticles.Where(a => a.Status == KbArticleStatus.Published);
+
+            // 2. PRD 9.6: Filter and Score based on relevance
+            var searchResults = publishedArticles
+                .Where(a =>
+                    (a.Title != null && a.Title.ToLower().Contains(lowerKeyword)) ||
+                    (a.Tags != null && a.Tags.ToLower().Contains(lowerKeyword)) ||
+                    (a.Content != null && a.Content.ToLower().Contains(lowerKeyword))
+                )
+                .Select(a => new
+                {
+                    Article = a,
+                    // Assign weight: Title match is worth 3, Tags worth 2, Content worth 1
+                    Score = (a.Title != null && a.Title.ToLower().Contains(lowerKeyword) ? 3 : 0) +
+                            (a.Tags != null && a.Tags.ToLower().Contains(lowerKeyword) ? 2 : 0) +
+                            (a.Content != null && a.Content.ToLower().Contains(lowerKeyword) ? 1 : 0)
+                })
+                .OrderByDescending(x => x.Score) // Highest score bubbles to the top
+                .Select(x => x.Article)
+                .ToList();
+
+            if (!searchResults.Any())
+                return ApiResponse<IEnumerable<KbArticleResponseDto>>.Failure("No articles found matching that keyword.");
+
+            var responseDtos = _mapper.Map<IEnumerable<KbArticleResponseDto>>(searchResults);
+            return ApiResponse<IEnumerable<KbArticleResponseDto>>.Success(responseDtos, $"Found {searchResults.Count} matching articles.");
         }
     }
 }

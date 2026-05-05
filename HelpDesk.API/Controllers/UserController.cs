@@ -98,5 +98,25 @@ namespace HelpDesk.API.Controllers
             return Ok(result);
         }
 
+        [HttpPost("bulk-import")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> BulkImportUsers(IFormFile file)
+        {
+            // 1. Safety checks
+            if (file == null || file.Length == 0)
+                return BadRequest(ApiResponse<BulkImportResultDto>.Failure("No file was uploaded."));
+
+            if (!file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+                return BadRequest(ApiResponse<BulkImportResultDto>.Failure("Only .csv files are allowed."));
+
+            // 2. Pass the file stream to the service
+            using var stream = file.OpenReadStream();
+            var response = await _userService.BulkImportUsersAsync(stream);
+
+            if (!response.IsSuccess) return BadRequest(response);
+
+            return Ok(response);
+        }
+
     }
 }

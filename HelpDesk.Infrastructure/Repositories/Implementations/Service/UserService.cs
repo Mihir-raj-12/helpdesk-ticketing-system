@@ -16,13 +16,23 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
     public class UserService : IUserService
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager; // NEW
         private readonly IMapper _mapper;
+        private readonly IUnitOfWork _unitOfWork; // NEW
+        private readonly IEmailQueue _emailQueue; // NEW
 
-
-        public UserService ( UserManager<ApplicationUser> userManager , IMapper mapper)
+        public UserService(
+            UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager,
+            IMapper mapper,
+            IUnitOfWork unitOfWork,
+            IEmailQueue emailQueue)
         {
             _userManager = userManager;
+            _roleManager = roleManager;
             _mapper = mapper;
+            _unitOfWork = unitOfWork;
+            _emailQueue = emailQueue;
         }
 
         public async Task<ApiResponse<UserResponseDto>> CreateUserAsync (CreateUserDto dto)
@@ -142,6 +152,102 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             }
 
             return ApiResponse<List<UserResponseDto>>.Success(responseDto);
+        }
+
+        public async Task<ApiResponse<BulkImportResultDto>> BulkImportUsersAsync(Stream csvStream)
+        {
+            var result = new BulkImportResultDto();
+            var allDepartments = await _unitOfWork.Departments.GetAllAsync();
+
+            using var reader = new StreamReader(csvStream);
+
+            // 1. Read and validate the header row
+            var headerLine = await reader.ReadLineAsync();
+            if (string.IsNullOrWhiteSpace(headerLine) || !headerLine.Contains("Email"))
+            {
+                return ApiResponse<BulkImportResultDto>.Failure("Invalid CSV format. Expected Header: Name, Email, Department, Role");
+            }
+
+            int lineNumber = 1;
+
+            // 2. Process each line
+            while (!reader.EndOfStream)
+            {
+                lineNumber++;
+                var line = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                result.TotalProcessed++;
+                var columns = line.Split(',');
+
+                if (columns.Length < 4)
+                {
+                    result.Errors.Add($"Row {lineNumber}: Missing columns. Expected 4, found {columns.Length}.");
+                    continue;
+                }
+
+                var fullName = columns[0].Trim();
+                var email = columns[1].Trim();
+                var departmentName = columns[2].Trim();
+                var roleName = columns[3].Trim();
+
+                // 3. Duplicate Check (PRD 14.6: skip duplicates, do not overwrite)
+                var existingUser = await _userManager.FindByEmailAsync(email);
+                if (existingUser != null)
+                {
+                    result.SkippedDuplicates++;
+                    result.Errors.Add($"Row {lineNumber}: Email '{email}' already exists. Skipped.");
+                    continue;
+                }
+
+                // 4. Role Validation
+                if (!await _roleManager.RoleExistsAsync(roleName))
+                {
+                    result.Errors.Add($"Row {lineNumber}: Role '{roleName}' does not exist.");
+                    continue;
+                }
+
+                // 5. Department Mapping (Fallback to 'General' if not found)
+                var department = allDepartments.FirstOrDefault(d => d.Name.Equals(departmentName, StringComparison.OrdinalIgnoreCase));
+                int departmentId = department?.Id ?? 1; // 1 is the 'General' fallback ID
+
+                // 6. Create the User
+                var newUser = new ApplicationUser
+                {
+                    UserName = email,
+                    Email = email,
+                    FullName = fullName,
+                    DepartmentId = departmentId,
+                    EmailConfirmed = true, // Auto-confirm for internal imports
+                    IsActive = true,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                // Generate a temporary password
+                var tempPassword = "TempPassword123!";
+                var createResult = await _userManager.CreateAsync(newUser, tempPassword);
+
+                if (createResult.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(newUser, roleName);
+                    result.SuccessfullyCreated++;
+
+                    // 7. Fire off the Welcome Email to our Background Queue!
+                    var emailPayload = new EmailPayload
+                    {
+                        To = email,
+                        Subject = "Welcome to the HelpDesk System",
+                        Body = $"Hello {fullName},\n\nYour account has been created.\nRole: {roleName}\nTemporary Password: {tempPassword}\n\nPlease log in and change your password immediately."
+                    };
+                    await _emailQueue.QueueEmailAsync(emailPayload);
+                }
+                else
+                {
+                    result.Errors.Add($"Row {lineNumber}: Failed to create user '{email}'. Reason: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
+                }
+            }
+
+            return ApiResponse<BulkImportResultDto>.Success(result, "Bulk import completed.");
         }
     }
 }

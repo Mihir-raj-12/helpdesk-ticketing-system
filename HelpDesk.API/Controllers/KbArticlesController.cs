@@ -64,7 +64,28 @@ namespace HelpDesk.API.Controllers
             return Ok(response);
         }
 
-    
+        [HttpPost("feedback")]
+        [Authorize(Roles = "RegularUser,SupportAgent")] // PRD says Regular Users can submit feedback
+        public async Task<IActionResult> SubmitFeedback([FromQuery]int id, [FromQuery] bool isHelpful)
+        {
+            var response = await _kbArticleService.SubmitFeedbackAsync(id, isHelpful);
+            if (!response.IsSuccess) return BadRequest(response);
+
+            return Ok(response);
+        }
+
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] string keyword)
+        {
+            var response = await _kbArticleService.SearchArticlesAsync(keyword);
+
+            // If no articles are found, it returns a 404 Not Found (which is standard REST practice for empty searches)
+            if (!response.IsSuccess) return NotFound(response);
+
+            return Ok(response);
+        }
+
+
     }
     
 }

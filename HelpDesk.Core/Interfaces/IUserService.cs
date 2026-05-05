@@ -21,5 +21,7 @@ namespace HelpDesk.Core.Interfaces
 
         Task<ApiResponse<List<UserResponseDto>>> GetSupportAgentsAsync();
 
+        Task<ApiResponse<BulkImportResultDto>> BulkImportUsersAsync(Stream csvStream);
+
     }
 }

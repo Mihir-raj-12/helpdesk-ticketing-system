@@ -14,5 +14,9 @@ namespace HelpDesk.Core.Interfaces
         Task<ApiResponse<IEnumerable<KbArticleResponseDto>>> GetAllPublishedAsync();
         Task<ApiResponse<KbArticleResponseDto>> CreateArticleAsync(CreateKbArticleDto dto);
         Task<ApiResponse<KbArticleResponseDto>> UpdateArticleAsync(int id, UpdateKbArticleDto dto);
+
+        Task<ApiResponse<bool>> SubmitFeedbackAsync(int id, bool isHelpful);
+
+        Task<ApiResponse<IEnumerable<KbArticleResponseDto>>> SearchArticlesAsync(string keyword);
     }
 }
