@@ -4,6 +4,8 @@ using HelpDesk.Core.DTOs.Ticket;
 using HelpDesk.Core.Entities;
 using HelpDesk.Core.Enums;
 using HelpDesk.Core.Interfaces;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,13 +20,19 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICurrentUserProvider _currentUserProvider;
         private readonly ISlaCalculatorService _slaCalculator;
+        private readonly IEmailQueue _emailQueue;
+        private readonly IConfiguration _config;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public TicketService (IMapper mapper, IUnitOfWork unitOfWork , ICurrentUserProvider currentUserProvider , ISlaCalculatorService slaCalculator)
+        public TicketService (IMapper mapper, IUnitOfWork unitOfWork , ICurrentUserProvider currentUserProvider , ISlaCalculatorService slaCalculator, IEmailQueue emailQueue,IConfiguration config, UserManager<ApplicationUser> userManager)
         {
             _mapper = mapper;
             _unitOfWork = unitOfWork;
             _currentUserProvider = currentUserProvider;
             _slaCalculator = slaCalculator;
+            _emailQueue = emailQueue;
+            _config = config;
+            _userManager = userManager; 
         }
 
 
@@ -57,8 +65,26 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
                 ticket.SlaDeadline = DateTime.UtcNow.AddHours(24);
             }
 
+            // 1. Ask Identity for the user's full profile using the ID
+            var raisedByUser = await _userManager.FindByIdAsync(ticket.RaisedByUserId);
+
+            // 2. Safety check: Fallback to an admin email just in case the user has no email registered
+            var targetEmail = raisedByUser?.Email ?? "admin@helpdesk.com";
+
             await _unitOfWork.Tickets.AddAsync(ticket);
-            await _unitOfWork.SaveChangesAsync(); 
+            await _unitOfWork.SaveChangesAsync();
+
+            var frontendUrl = _config["FrontendUrl"];
+            var ticketUrl = $"{frontendUrl}/tickets/details/{ticket.Id}";
+
+            var emailPayload = new EmailPayload
+            {
+                To = targetEmail, // Or your friend's email
+                Subject = $"New Ticket Created: {ticket.Title}",
+                Body = $"Hello,\n\nA new ticket (ID: {ticket.Id}) was just raised on your behalf.\n\nThank you,\nHelpDesk Team"
+            };
+
+            await _emailQueue.QueueEmailAsync(emailPayload);
 
             var responseDto = new CreateTicketResponseDto
             {

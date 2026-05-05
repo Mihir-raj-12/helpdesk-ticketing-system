@@ -130,6 +130,14 @@ builder.Services.AddScoped<IKbArticleService, KbArticleService>();
 builder.Services.AddHostedService<AutoEscalationWorker>();
 builder.Services.AddHostedService<RecurringTicketWorker>();
 
+// 1. Register the Queue as a Singleton so the API and the Worker share the exact same waiting room
+builder.Services.AddSingleton<IEmailQueue,EmailQueue>();
+
+// 2. Register the Worker
+builder.Services.AddHostedService<EmailNotificationWorker>();
+
+
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

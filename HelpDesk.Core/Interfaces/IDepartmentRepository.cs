@@ -1,4 +1,5 @@
-﻿using HelpDesk.Core.Entities;
+﻿using HelpDesk.Core.DTOs.Dashboard;
+using HelpDesk.Core.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;

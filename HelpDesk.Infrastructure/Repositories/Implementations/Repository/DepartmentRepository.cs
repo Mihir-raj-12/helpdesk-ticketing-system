@@ -1,4 +1,6 @@
-﻿using HelpDesk.Core.Entities;
+﻿using HelpDesk.Core.DTOs.Dashboard;
+using HelpDesk.Core.Entities;
+using HelpDesk.Core.Enums;
 using HelpDesk.Core.Interfaces;
 using HelpDesk.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -29,5 +31,8 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Repository
                 .Include(d => d.Users)
                 .FirstOrDefaultAsync(d => d.Id == id && d.IsActive);
         }
+
+        
+
     }
 }

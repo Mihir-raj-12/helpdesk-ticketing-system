@@ -21,5 +21,8 @@ namespace HelpDesk.Core.DTOs.Dashboard
         public int TicketsThisMonth { get; set; }
         public int TicketsLastMonth { get; set; }
         public List<TopAgentDto> TopAgents { get; set; } = new();
+
+        public int EscalatedTickets { get; set; }
+        public int SlaBreachedTickets { get; set; }
     }
 }

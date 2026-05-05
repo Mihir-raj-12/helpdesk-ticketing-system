@@ -68,6 +68,7 @@ namespace HelpDesk.Infrastructure.BackgroundJobs
                     Priority = TicketPriority.Medium,
                     CreatedDate = DateTime.UtcNow,
                     LastUpdatedDate = DateTime.UtcNow,
+                    SlaDeadline = DateTime.UtcNow.AddDays(2),
                     IsActive = true
                 };
 

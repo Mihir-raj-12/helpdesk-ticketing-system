@@ -1,4 +1,5 @@
-﻿using HelpDesk.Core.Entities;
+﻿using HelpDesk.Core.DTOs.Dashboard;
+using HelpDesk.Core.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,5 +14,7 @@ namespace HelpDesk.Core.Interfaces
         Task<IEnumerable<Ticket>> GetTicketsByAgentIdAsync(string agentId);
         Task<Ticket?> GetTicketWithDetailsAsync(int ticketId);
         Task<IEnumerable<Ticket>> GetAllTicketsWithDetailsAsync();
+
+        Task<DashboardResponseDto> GetDashboardMetricsAsync(DateTime startOfThisMonth, DateTime startOfLastMonth, string userId, string userRole);
     }
 }

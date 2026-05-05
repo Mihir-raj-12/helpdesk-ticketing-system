@@ -1,4 +1,6 @@
-﻿using HelpDesk.Core.Entities;
+﻿using HelpDesk.Core.DTOs.Dashboard;
+using HelpDesk.Core.Entities;
+using HelpDesk.Core.Enums;
 using HelpDesk.Core.Interfaces;
 using HelpDesk.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -60,6 +62,60 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Repository
                 .Where(t => t.IsActive)
                 .OrderByDescending(t => t.CreatedDate)
                 .ToListAsync();
+        }
+
+        public async Task<DashboardResponseDto> GetDashboardMetricsAsync(DateTime startOfThisMonth, DateTime startOfLastMonth, string userId, string userRole)
+        {
+            var now = DateTime.UtcNow;
+
+            var query = _dbSet.Where(t => t.IsActive);
+
+            if (userRole == "SupportAgent")
+            {
+                query = query.Where(t => t.AssignedToUserId == userId);
+            }
+            else if (userRole == "RegularUser")
+            {
+                query = query.Where(t => t.RaisedByUserId == userId);
+            }
+
+            return new DashboardResponseDto
+            {
+                TotalTickets = await query.CountAsync(),
+
+                OpenTickets = await query.CountAsync(t => t.Status == TicketStatus.Open),
+                InProgressTickets = await query.CountAsync(t => t.Status == TicketStatus.InProgress),
+                ResolvedTickets = await query.CountAsync(t => t.Status == TicketStatus.Resolved),
+                OnHoldTickets = await query.CountAsync(t => t.Status == TicketStatus.OnHold),
+                ClosedTickets = await query.CountAsync(t => t.Status == TicketStatus.Closed),
+
+                LowPriorityTickets = await query.CountAsync(t => t.Priority == TicketPriority.Low),
+                MediumPriorityTickets = await query.CountAsync(t => t.Priority == TicketPriority.Medium),
+                HighPriorityTickets = await query.CountAsync(t => t.Priority == TicketPriority.High),
+                CriticalPriorityTickets = await query.CountAsync(t => t.Priority == TicketPriority.Critical),
+
+                EscalatedTickets = await query.CountAsync(t => t.EscalationFlag == true),
+
+                SlaBreachedTickets = await query.CountAsync(t =>
+                    t.SlaDeadline <= now &&
+                    t.Status != TicketStatus.Resolved &&
+                    t.Status != TicketStatus.Closed),
+
+                TicketsThisMonth = await query.CountAsync(t => t.CreatedDate >= startOfThisMonth),
+                TicketsLastMonth = await query.CountAsync(t => t.CreatedDate >= startOfLastMonth && t.CreatedDate < startOfThisMonth),
+
+                TopAgents = await query
+                    .Where(t => t.Status == TicketStatus.Resolved && t.AssignedToUser != null)
+                    .GroupBy(t => t.AssignedToUser.FullName)
+                    .Select(g => new TopAgentDto
+                    {
+                        AgentName = g.Key ?? "Unknown Agent",
+                        ResolvedTicketsCount = g.Count()
+                    })
+                    .OrderByDescending(a => a.ResolvedTicketsCount)
+                    .Take(5)
+                    .ToListAsync()
+            };
         }
     }
 }

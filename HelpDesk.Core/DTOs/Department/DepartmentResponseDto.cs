@@ -16,5 +16,6 @@ namespace HelpDesk.Core.DTOs.Department
         public string? DepartmentHeadName { get; set; } // We send the name so Angular doesn't have to look it up!
 
         public int ActiveUserCount { get; set; } // PRD Requirement: Admin needs to see how many users are in it
+       
     }
 }
