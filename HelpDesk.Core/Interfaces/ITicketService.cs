@@ -19,5 +19,7 @@ namespace HelpDesk.Core.Interfaces
 
         Task<ApiResponse<TicketResponseDto>> EscalateTicketAsync(int ticketId, string reason, string currentUserId);
         Task<ApiResponse<TicketResponseDto>> AcknowledgeEscalationAsync(int ticketId);
+
+        Task<ApiResponse<bool>> SubmitTicketFeedbackAsync(SubmitFeedbackDto dto);
     }
 }

@@ -307,6 +307,46 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             return ApiResponse<TicketResponseDto>.Success(responseDto, "Escalation acknowledged successfully.");
         }
 
+        public async Task<ApiResponse<bool>> SubmitTicketFeedbackAsync(SubmitFeedbackDto dto)
+        {
+            var currentUserId = _currentUserProvider.GetCurrentUserId();
+            if (string.IsNullOrEmpty(currentUserId)) return ApiResponse<bool>.Failure("User not found.");
+
+            var ticket = await _unitOfWork.Tickets.GetByIdAsync(dto.TicketId);
+
+            if (ticket == null)
+                return ApiResponse<bool>.Failure("Ticket not found.");
+
+            if (ticket.RaisedByUserId != currentUserId)
+                return ApiResponse<bool>.Failure("You can only submit feedback for your own tickets.");
+
+            if (ticket.Status != TicketStatus.Closed && ticket.Status != TicketStatus.Resolved)
+                return ApiResponse<bool>.Failure("Feedback can only be submitted for resolved or closed tickets.");
+
+            // PRD 11.2: Check for duplicate submissions (Max 1 per ticket)
+            // Note: Assuming you added TicketFeedbacks to your IUnitOfWork
+            var existingFeedback = await _unitOfWork.TicketFeedbacks.FindAsync(f => f.TicketId == dto.TicketId);
+            if (existingFeedback.Any())
+            {
+                return ApiResponse<bool>.Failure("Feedback has already been submitted for this ticket.");
+            }
+
+            var feedback = new TicketFeedback
+            {
+                TicketId = dto.TicketId,
+                CsatScore = dto.CsatScore,
+                Comments = dto.Comments,
+                SubmittedByUserId = currentUserId,
+                CreatedDate = DateTime.UtcNow,
+                LastUpdatedDate = DateTime.UtcNow
+            };
+
+            await _unitOfWork.TicketFeedbacks.AddAsync(feedback);
+            await _unitOfWork.SaveChangesAsync();
+
+            return ApiResponse<bool>.Success(true, "Thank you! Your feedback has been recorded.");
+        }
+
 
     }
 }

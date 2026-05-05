@@ -29,6 +29,8 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
         public IGenericRepository<KbArticle> KbArticles { get; private set; }
         public IGenericRepository<KbArticleVersion> KbArticleVersions { get; private set; }
 
+        public IGenericRepository<TicketFeedback> TicketFeedbacks { get; private set; }
+
         public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
@@ -43,6 +45,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             SlaConfigs = new GenericRepository<SlaConfig>(_context);
             KbArticles = new GenericRepository<KbArticle>(_context);
             KbArticleVersions = new GenericRepository<KbArticleVersion>(_context);
+            TicketFeedbacks = new GenericRepository<TicketFeedback>(_context);
         }
 
         public async Task<int> SaveChangesAsync()

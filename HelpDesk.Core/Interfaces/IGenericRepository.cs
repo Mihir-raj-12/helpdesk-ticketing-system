@@ -17,5 +17,7 @@ namespace HelpDesk.Core.Interfaces
    
         Task UpdateAsync(T entity, params Expression<Func<T, object>>[] properties);
         Task SoftDeleteAsync(int id);
+
+        Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
     }
 }

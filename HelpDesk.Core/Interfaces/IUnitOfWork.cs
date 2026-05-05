@@ -24,5 +24,7 @@ namespace HelpDesk.Core.Interfaces
 
         IGenericRepository<KbArticle> KbArticles { get; }
         IGenericRepository<KbArticleVersion> KbArticleVersions { get; }
+
+        IGenericRepository<TicketFeedback> TicketFeedbacks { get; }
     }
 }

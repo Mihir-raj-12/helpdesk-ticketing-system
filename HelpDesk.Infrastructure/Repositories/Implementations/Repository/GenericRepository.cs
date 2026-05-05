@@ -78,5 +78,11 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Repository
         }
 
 
+        public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
+        {
+            // Applies your custom filter (the predicate) AND ensures we only get active records!
+            return await _dbSet.Where(e => e.IsActive).Where(predicate).ToListAsync();
+        }
+
     }
 }

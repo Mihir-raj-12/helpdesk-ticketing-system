@@ -135,6 +135,18 @@ namespace HelpDesk.API.Controllers
             return Ok(response);
         }
 
+        [HttpPost("feedback")]
+        [Authorize(Roles = "RegularUser")]
+        public async Task<IActionResult> SubmitFeedback([FromBody] SubmitFeedbackDto dto)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            var response = await _ticketService.SubmitTicketFeedbackAsync(dto);
+            if (!response.IsSuccess) return BadRequest(response);
+
+            return Ok(response);
+        }
+
     }
 
 
