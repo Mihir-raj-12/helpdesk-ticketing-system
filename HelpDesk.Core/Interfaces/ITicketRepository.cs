@@ -16,5 +16,7 @@ namespace HelpDesk.Core.Interfaces
         Task<IEnumerable<Ticket>> GetAllTicketsWithDetailsAsync();
 
         Task<DashboardResponseDto> GetDashboardMetricsAsync(DateTime startOfThisMonth, DateTime startOfLastMonth, string userId, string userRole);
+
+        Task<IEnumerable<Ticket>> GetActionableTicketsForExportAsync(string userId, string userRole);
     }
 }

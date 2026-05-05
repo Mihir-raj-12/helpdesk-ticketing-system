@@ -117,5 +117,29 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Repository
                     .ToListAsync()
             };
         }
+
+
+        public async Task<IEnumerable<Ticket>> GetActionableTicketsForExportAsync(string userId, string userRole)
+        {
+            var now = DateTime.UtcNow;
+
+            // We Include the User tables so we have names for the CSV report
+            var query = _dbSet
+                .Include(t => t.RaisedByUser)
+                .Include(t => t.AssignedToUser)
+                .Where(t => t.IsActive);
+
+            // Security check: Only export what the user is allowed to see
+            if (userRole == "SupportAgent") query = query.Where(t => t.AssignedToUserId == userId);
+            else if (userRole == "RegularUser") query = query.Where(t => t.RaisedByUserId == userId);
+
+            // Filter for ONLY Escalated OR Breached tickets
+            return await query
+                .Where(t => t.EscalationFlag == true ||
+                           (t.SlaDeadline <= now && t.Status != TicketStatus.Resolved && t.Status != TicketStatus.Closed))
+                .OrderByDescending(t => t.Priority) // Sort by highest priority first
+                .ThenBy(t => t.CreatedDate)
+                .ToListAsync();
+        }
     }
 }

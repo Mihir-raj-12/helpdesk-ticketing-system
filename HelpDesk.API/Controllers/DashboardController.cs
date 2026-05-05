@@ -34,5 +34,21 @@ namespace HelpDesk.API.Controllers
 
             return Ok(response);
         }
+
+        [HttpGet("export/urgent")]
+        public async Task<IActionResult> ExportUrgentTickets()
+        {
+            try
+            {
+                var export = await _dashboardService.ExportActionableTicketsCsvAsync();
+
+                // This tells the browser "Download this file immediately!"
+                return File(export.FileContents, export.ContentType, export.FileName);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<string>.Failure($"Export failed: {ex.Message}"));
+            }
+        }
     }
 }
