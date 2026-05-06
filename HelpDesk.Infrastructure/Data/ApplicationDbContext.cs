@@ -36,6 +36,8 @@ namespace HelpDesk.Infrastructure.Data
         public DbSet<TicketFeedback> TicketFeedbacks { get; set; }
 
         public DbSet<RecurringTicket> RecurringTickets { get; set; }
+
+        DbSet<NotificationPreference> NotificationPreferences { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -213,10 +215,22 @@ namespace HelpDesk.Infrastructure.Data
 
             // 4. A Version is saved by ONE User (Author/Editor)
             builder.Entity<KbArticleVersion>()
-                .HasOne(kv => kv.SavedByUser)
+                .HasOne(kv => kv.UpdatedByUser)
                 .WithMany()
-                .HasForeignKey(kv => kv.SavedByUserId)
+                .HasForeignKey(kv => kv.UpdatedByUserId)
                 .OnDelete(DeleteBehavior.Restrict); // NEVER delete a user just because an article version is deleted!
+
+            builder.Entity<KbArticle>()
+    .HasOne(k => k.AuthorUser)
+    .WithMany()
+    .HasForeignKey(k => k.AuthorUserId)
+    .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<KbArticle>()
+                .HasOne(k => k.LastUpdatedByUser)
+                .WithMany()
+                .HasForeignKey(k => k.LastUpdatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

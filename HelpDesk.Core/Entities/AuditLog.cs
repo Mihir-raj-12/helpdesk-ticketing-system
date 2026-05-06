@@ -39,5 +39,14 @@ namespace HelpDesk.Core.Entities
         public ApplicationUser? PerformedByUser { get; set; } = null!;
 
         public ICollection<AuditDetail> AuditDetails { get; set; } = new List<AuditDetail>();
+
+        [Required]
+        public string ActorName { get; set; } = string.Empty;
+
+        [Required]
+        public string ActorEmail { get; set; } = string.Empty;
+
+        [Required]
+        public string ActorRole { get; set; } = string.Empty;
     }
 }

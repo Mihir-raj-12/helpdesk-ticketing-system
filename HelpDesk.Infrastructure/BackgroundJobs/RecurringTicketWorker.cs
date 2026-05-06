@@ -49,25 +49,37 @@ namespace HelpDesk.Infrastructure.BackgroundJobs
                 .Where(rt => rt.NextRunDate <= DateTime.UtcNow)
                 .ToListAsync();
 
+            
+
             if (!dueTemplates.Any()) return;
 
             var newTickets = new List<Ticket>();
 
             foreach (var template in dueTemplates)
             {
-                _logger.LogInformation($"Generating recurring ticket from template: {template.Title}");
+                _logger.LogInformation($"Generating recurring ticket from template: {template.TicketTitle}");
 
+                var user = await context.Users.FindAsync(template.RaiseOnBehalfOfUserId);
                 // 2. Create the actual Ticket based on the blueprint
                 var ticket = new Ticket
                 {
-                    Title = template.Title,
+                    Title = template.TicketTitle, // Updated property name
                     Description = template.Description,
                     CategoryId = template.CategoryId,
-                    RaisedByUserId = template.RaisedByUserId,
-                    Status = TicketStatus.Open, // Brand new ticket!
-                    Priority = TicketPriority.Medium,
+                    RaisedByUserId = template.RaiseOnBehalfOfUserId, // Updated property name
+
+                    // --- THE NEW PRD ENFORCEMENTS ---
+                    DepartmentId = user?.DepartmentId ?? 1, // Fallback to 'General' dept if user is weirdly null
+                    Priority = template.Priority, // Dynamically pulls the priority from the template!
+                    AssignedToUserId = template.AssignToUserId, // Applies pre-assignment if the template has one
+
+                    // Logic edge case: If the template pre-assigns an agent, it skips 'Open' and goes straight to 'InProgress'
+                    Status = string.IsNullOrEmpty(template.AssignToUserId) ? TicketStatus.Open : TicketStatus.InProgress,
+
                     CreatedDate = DateTime.UtcNow,
                     LastUpdatedDate = DateTime.UtcNow,
+
+                    // Ideally use your SlaCalculatorService here, but if not injected yet, leave your placeholder
                     SlaDeadline = DateTime.UtcNow.AddDays(2),
                     IsActive = true
                 };
@@ -75,7 +87,7 @@ namespace HelpDesk.Infrastructure.BackgroundJobs
                 newTickets.Add(ticket);
 
                 // 3. Reschedule the template for the future
-                template.NextRunDate = CalculateNextRunDate(template.NextRunDate, template.Frequency);
+                template.NextRunDate = CalculateNextRunDate(template.NextRunDate.Value, template.RecurrencePattern);
             }
 
             // 4. Add the new tickets to the database

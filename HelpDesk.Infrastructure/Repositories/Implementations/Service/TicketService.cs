@@ -143,16 +143,27 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             UpdateTicketStatusDto dto)
         {   
             var currentUserId = _currentUserProvider.GetCurrentUserId();
+            var currentUserRole = _currentUserProvider.GetCurrentUserRole();
+
             if (string.IsNullOrEmpty(currentUserId)) return ApiResponse<bool>.Failure("User not found.");
 
             var ticket = await _unitOfWork.Tickets.GetByIdAsync(dto.TicketId);
             if (ticket == null)
                 return ApiResponse<bool>.Failure("Ticket not found");
 
-            // Only assigned agent can update status
-            if (ticket.AssignedToUserId != currentUserId)
-                return ApiResponse<bool>.Failure(
-                    "You can only update status of tickets assigned to you");
+            // --- FIX 1 (L06): Admin Bypass ---
+            // If they are NOT an Admin, they MUST be the assigned agent to change the status.
+            if (currentUserRole != "Admin" && ticket.AssignedToUserId != currentUserId)
+            {
+                return ApiResponse<bool>.Failure("You can only update the status of tickets assigned to you.");
+            }
+
+            // --- FIX 2 (L07): Restricted Statuses ---
+            // Only Admins are allowed to Close or Reopen tickets.
+            if ((dto.Status == TicketStatus.Closed || dto.Status == TicketStatus.Reopened) && currentUserRole != "Admin")
+            {
+                return ApiResponse<bool>.Failure("Only an Administrator can Close or Reopen a ticket.");
+            }
 
             if (!Enum.IsDefined(typeof(TicketStatus), dto.Status))
                 return ApiResponse<bool>.Failure("Invalid status value");
@@ -160,6 +171,18 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             var oldStatus = ticket.Status;
 
             ticket.Status = dto.Status;
+
+            // --- FIX 3 (L05): SLA Reset on Reopen ---
+            // PRD 6.3: "Reopening a ticket resets the SLA timer from zero using the ticket's current priority."
+            if (dto.Status == TicketStatus.Reopened)
+            {
+                var slaConfigs = await _unitOfWork.SlaConfigs.GetAllAsync();
+                var config = slaConfigs.FirstOrDefault(c => c.Priority == ticket.Priority);
+                if (config != null)
+                {
+                    ticket.SlaDeadline = await _slaCalculator.CalculateDeadlineAsync(DateTime.UtcNow, config.ResolutionHours);
+                }
+            }
 
             await _unitOfWork.Tickets.UpdateAsync(ticket, t => t.Status);
 

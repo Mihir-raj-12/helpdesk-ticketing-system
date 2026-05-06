@@ -1,6 +1,8 @@
 ﻿using HelpDesk.Core.Enums;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,8 +11,13 @@ namespace HelpDesk.Core.Entities
 {
     public class Ticket : BaseEntity
     {
+        [Required]
+        [MaxLength(150)]
         public string Title { get; set; } = string .Empty;
 
+
+        [Required]
+        [MaxLength(2000)]
         public string Description { get; set; } = string.Empty;
 
         public TicketStatus Status { get; set; } = TicketStatus.Open;
@@ -45,5 +52,22 @@ namespace HelpDesk.Core.Entities
         public string? EscalationReason { get; set; }
         public DateTime? EscalatedAt { get; set; }
         public DateTime? EscalationAcknowledgedAt { get; set; }
+
+        [Required]
+        public int DepartmentId { get; set; } // The department of the user who raised it
+
+        [ForeignKey("DepartmentId")]
+        public Department? Department { get; set; }
+
+        public string? AffectedAsset { get; set; } // e.g., "Laptop SN-2341"
+
+        public int? RelatedTicketId { get; set; } // Link to another ticket
+
+        [ForeignKey("RelatedTicketId")]
+        public Ticket? RelatedTicket { get; set; }
+
+        public bool? SlaClosedWithinSla { get; set; } // Locked in when closed
+
+        public DateTime? ArchivedAt { get; set; } // For the archival background worker
     }
 }

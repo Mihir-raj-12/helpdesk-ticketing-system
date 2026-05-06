@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,5 +38,20 @@ namespace HelpDesk.Core.Entities
         public int HelpfulCount { get; set; } = 0;
 
         public int NotHelpfulCount { get; set; } = 0;
+
+        // --- NEW PRD SECURITY COLUMNS ---
+        [Required]
+        [MaxLength(450)]
+        public string AuthorUserId { get; set; } = string.Empty;
+
+        [ForeignKey("AuthorUserId")]
+        public ApplicationUser? AuthorUser { get; set; }
+
+        [Required]
+        [MaxLength(450)]
+        public string LastUpdatedByUserId { get; set; } = string.Empty;
+
+        [ForeignKey("LastUpdatedByUserId")]
+        public ApplicationUser? LastUpdatedByUser { get; set; }
     }
 }

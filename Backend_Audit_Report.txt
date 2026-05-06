@@ -1,0 +1,500 @@
+================================================================================
+           HELP DESK TICKET MANAGEMENT SYSTEM — BACKEND AUDIT REPORT
+                    PRD v2.0 vs. Actual ASP.NET Core 8 Code
+                        Prepared: 2026-05-05 | Status: DRAFT
+================================================================================
+
+
+### 🔴 CRITICAL GAPS (Entire features or endpoints missing)
+================================================================================
+
+C01 — REPORTING & ANALYTICS MODULE (PRD Section 7) — ENTIRELY MISSING
+    The PRD defines 9 distinct reports (Ticket Volume, Agent Performance,
+    SLA Compliance, Open Tickets Ageing, Category Breakdown, Department Load,
+    Escalation Report, User Satisfaction, KB Usage). There is NO
+    ReportsController, no IReportService, no report DTOs, and no report
+    generation logic anywhere in the codebase. The existing DashboardService
+    provides only aggregate counts — it is NOT a reporting engine.
+    Missing sub-features:
+      - Date-range filtering with presets (Today, This Week, Last 3 Months, etc.)
+      - CSV and PDF export for each report
+      - Agent self-service personal dashboard (PRD 7.4)
+      - Async export for >10,000 rows with email download link (PRD 7.5)
+      - PDF branded header template (PRD 7.5)
+
+C02 — NOTIFICATION PREFERENCES (PRD Section 5.3) — ENTIRELY MISSING
+    No NotificationPreference entity, no preferences table, no controller
+    endpoint for users to manage their notification settings. The PRD
+    requires every user to enable/disable each notification type individually.
+    SLA breach and escalation alerts must be mandatory for Admin.
+
+C03 — RECURRING TICKET TEMPLATE CRUD ENDPOINTS (PRD Section 12) — MISSING
+    The RecurringTicket entity and RecurringTicketWorker background job exist,
+    but there is NO RecurringTicketController and NO IRecurringTicketService.
+    Admin has zero ability to create, edit, pause, resume, delete, or
+    manually trigger recurring templates via the API. The worker fires
+    templates but Admin cannot manage them.
+    Missing entity fields vs PRD 12.2:
+      - TemplateName (internal admin identifier) — MISSING
+      - Priority on the template — MISSING (hardcoded to Medium in worker)
+      - AssignToAgentId (optional pre-assignment) — MISSING
+      - RecurrencePattern supporting CRON — MISSING (only simple string)
+      - StartDate — MISSING
+      - EndDate / MaxOccurrences — MISSING
+      - Status (Active/Paused) — MISSING (uses BaseEntity.IsActive as proxy)
+    Missing worker logic:
+      - No holiday/non-business-day deferral (PRD 12.3)
+      - No run log recording template name, ticket ID, scheduled vs actual time
+      - No check for deactivated pre-assigned agent
+
+C04 — PUBLIC HOLIDAY CRUD ENDPOINTS (PRD Section 6.4) — MISSING
+    PublicHoliday entity exists but there is no controller or service to
+    let Admin add or remove public holidays. Admin must manage holidays
+    from the Settings page per PRD.
+
+C05 — TICKET SLA OVERRIDE BY ADMIN (PRD Section 6.3) — MISSING
+    No endpoint exists for Admin to manually override a ticket's SLA
+    deadline. The PRD states: "Admin can manually override the SLA deadline
+    on any ticket for exceptional circumstances — this override is recorded
+    in the audit trail."
+
+C06 — KB VERSION HISTORY BROWSING & RESTORE (PRD Section 9.5) — MISSING
+    KbArticleVersion records are created on save, but there is NO endpoint
+    to list version history for an article, view a specific old version,
+    or restore a previous version (which should create a new version).
+
+C07 — KB DELETE ENDPOINT (PRD Section 9.4) — MISSING
+    Admin must have full control including delete. No delete endpoint exists
+    on KbArticlesController.
+
+C08 — KB ARTICLE SUGGESTION DURING TICKET CREATION (PRD Section 9.6) — MISSING
+    "When an employee begins typing a ticket title, the system must suggest
+    up to 3 relevant KB articles in a sidebar." No endpoint returns top-3
+    suggestions filtered by a partial title string.
+
+C09 — KB ARTICLE LINK-TO-TICKET (PRD Section 9.7) — MISSING
+    "Agent can attach a KB article link to any ticket comment with a single
+    click" and "mark a resolved ticket as 'Resolved via KB' and reference
+    the article." No ResolvedViaKbArticleId field on Ticket entity, no
+    linking endpoint.
+
+C10 — DATA ARCHIVAL POLICY (PRD Section 14.7) — MISSING
+    No archival mechanism, no ArchivedAt field, no background job to archive
+    tickets older than N months, no Admin configuration for archival policy.
+
+C11 — COMPANY LOGO UPLOAD (PRD Section 14.2) — MISSING
+    SystemSetting has no CompanyLogoUrl or file-upload endpoint.
+
+C12 — DEFAULT TIMEZONE SETTING (PRD Section 14.2) — MISSING
+    SystemSetting has no DefaultTimeZone property.
+
+C13 — SESSION TIMEOUT CONFIGURATION (PRD Section 14.2) — MISSING
+    SystemSetting has no SessionTimeoutMinutes property. PRD requires
+    configurable between 15 minutes and 8 hours.
+
+C14 — NOTIFICATION CONFIGURATION ADMIN (PRD Section 14.5) — MISSING
+    No endpoint for Admin to toggle system-wide notification events on/off,
+    no "Send Test Email" function, no survey email delay setting.
+
+C15 — SMTP / EMAIL PROVIDER SWITCHABLE CONFIG (PRD Section 5.5) — MISSING
+    Email config is hardcoded in appsettings.json. PRD requires Admin to
+    configure SMTP or switch to a transactional provider (SendGrid/Mailgun)
+    from the Settings page. No SmtpConfig entity or admin endpoint.
+
+C16 — LOGOUT ENDPOINT (PRD Section 8.2) — MISSING
+    AuthController only has Login. PRD requires logging user logout events.
+    No logout endpoint exists.
+
+C17 — PASSWORD CHANGE / RESET ENDPOINTS (PRD Section 8.2) — MISSING
+    PRD requires audit logging of password changed/reset. No
+    ChangePassword or ResetPassword endpoints exist.
+
+C18 — USER REACTIVATION ENDPOINT — MISSING
+    DeactivateUser exists but there is no ReactivateUser endpoint.
+    PRD Section 8.2 requires logging "User account reactivated."
+
+C19 — DEPARTMENT SUMMARY ENDPOINT (PRD Section 13.3) — MISSING
+    "Admin can view a department summary showing: number of active users,
+    open tickets count, and tickets raised in the last 30 days."
+    No such endpoint exists in DepartmentController.
+
+C20 — DEPARTMENT HEAD TICKET VISIBILITY (PRD Section 13.4) — MISSING
+    "A Department Head can view all tickets raised by users in their own
+    department." No endpoint or service logic provides this filtered view.
+
+
+### 🟡 LOGIC & EDGE CASE GAPS (Features built, but missing PRD constraints)
+================================================================================
+
+L01 — TICKET ENTITY MISSING FIELDS (PRD Section 3)
+    - Department (int DepartmentId FK) — MISSING on Ticket. PRD says
+      "The department the raising employee belongs to" must be on the ticket.
+    - AffectedAsset (optional string) — MISSING
+    - RelatedTicketId (optional int? FK to another Ticket) — MISSING
+    - SlaClosedWithinSla (bool?) — MISSING. PRD 6.3: "Closing a ticket
+      records whether it was closed Within SLA or Breached — this cannot
+      be changed after closure."
+
+L02 — TICKET TITLE MAX LENGTH NOT ENFORCED
+    PRD says max 150 chars. No [MaxLength(150)] on Ticket.Title entity or
+    CreateTicketDto. Description max 2000 chars is also unenforced.
+
+L03 — SLA TIMER PAUSE/RESUME ON ON HOLD (PRD Section 6.3) — NOT IMPLEMENTED
+    "The SLA timer pauses when a ticket is moved to On Hold and resumes
+    when it moves to In Progress." The code has no mechanism to track
+    cumulative paused time. There is no SlaPausedAt, SlaPausedDuration,
+    or equivalent fields. The SlaDeadline is set once at creation and
+    never adjusted for On Hold periods.
+
+L04 — SLA RECALCULATION ON PRIORITY CHANGE (PRD Section 6.3) — NOT IMPLEMENTED
+    "Changing a ticket's priority must recalculate the SLA deadline."
+    UpdateTicketPriorityAsync() in TicketService changes the priority
+    but does NOT recalculate the SLA deadline. Only EscalateTicketAsync
+    does SLA recalculation.
+
+L05 — SLA TIMER RESET ON REOPEN (PRD Section 6.3) — NOT IMPLEMENTED
+    "Reopening a ticket resets the SLA timer from zero using the ticket's
+    current priority." UpdateTicketStatusAsync does not check for
+    Reopened status and does not reset the SLA deadline.
+
+L06 — UPDATE TICKET STATUS: ADMIN BYPASS MISSING (PRD Section 2 & 4)
+    UpdateTicketStatusAsync() checks: "if ticket.AssignedToUserId !=
+    currentUserId return failure." This blocks Admin from changing ANY
+    ticket's status. PRD Section 2 says Admin can change status on
+    "Any ticket." The code should allow Admin to bypass this check.
+
+L07 — CLOSE / REOPEN RESTRICTED TO ADMIN (PRD Section 2) — NOT ENFORCED
+    PRD says only Admin can Close or Reopen a ticket. The current
+    UpdateTicketStatus endpoint allows any SupportAgent to set status to
+    Closed or Reopened if assigned to the ticket. There is no validation
+    that TicketStatus.Closed and TicketStatus.Reopened require Admin role.
+
+L08 — TICKET CREATION: ROLE CHECK FOR "ON BEHALF OF" (PRD Section 2)
+    PRD: Regular Users can raise tickets, SupportAgents CANNOT raise
+    tickets, Admin can raise "on behalf of user." CreateTicket has no role
+    check — a SupportAgent can call CreateTicket and it will succeed.
+    The dto.RaisedForUserId field exists but there is no check that only
+    Admin can set it.
+
+L09 — AUTO-ESCALATION: UNASSIGNED CRITICAL TICKET (PRD Section 10.4)
+    "If a Critical ticket has not been assigned within 30 minutes of
+    creation, it is automatically escalated." AutoEscalationWorker only
+    checks for SLA-breached tickets. It does NOT check for unassigned
+    Critical tickets older than 30 minutes.
+
+L10 — AUTO-ESCALATION: ON HOLD > 3 BUSINESS DAYS (PRD Section 10.4)
+    "If a ticket has been On Hold for more than 3 consecutive business
+    days without any comment or status change, it is auto-escalated."
+    AutoEscalationWorker does not implement this rule.
+
+L11 — ESCALATION: ONCE-PER-STATUS-CYCLE (PRD Section 10.3)
+    "A ticket can only be escalated once per status cycle — it cannot be
+    re-escalated until it has been moved to a new status." The current
+    code checks if EscalationFlag && EscalationAcknowledgedAt == null,
+    which prevents re-escalation until acknowledged, but not per-status-
+    cycle. A ticket acknowledged but still in the same status could be
+    escalated again.
+
+L12 — AUTO-ESCALATION ON USER REOPEN 3+ TIMES (PRD Section 10.2)
+    "A user who reopens a previously closed ticket three or more times
+    will trigger an automatic escalation flag." No reopen counter exists
+    on the Ticket entity, and no logic tracks this.
+
+L13 — CSAT SURVEY: 7-DAY EXPIRY NOT ENFORCED (PRD Section 11.2)
+    "Survey links expire 7 days after the ticket is closed — after expiry,
+    no response can be submitted." SubmitTicketFeedbackAsync checks if
+    ticket is Closed/Resolved and if feedback already exists, but does
+    NOT check if 7 days have elapsed since closure.
+
+L14 — CSAT SURVEY EMAIL NOT SENT ON TICKET CLOSE (PRD Section 5.2 & 11.2)
+    UpdateTicketStatusAsync does not queue a CSAT survey email when a
+    ticket moves to Closed status.
+
+L15 — EMAIL NOTIFICATIONS: MOST TRIGGERS NOT IMPLEMENTED (PRD Section 5.2)
+    Only ticket-creation email is sent. Missing email triggers:
+      - Ticket assigned to agent
+      - Ticket status changed
+      - New comment posted
+      - Ticket closed
+      - Ticket reopened
+      - Ticket escalated
+      - SLA warning (75% elapsed)
+      - SLA breached
+      - Agent reassigned
+      - Account created (only sent during bulk import, not single create)
+      - Account deactivated
+
+L16 — EMAIL: NO HTML TEMPLATE, NO PLAIN-TEXT FALLBACK (PRD Section 5.4)
+    Emails are sent as plain text only ("text/plain"). PRD requires
+    branded HTML template with logo, ticket ID, status badge, deep-link,
+    footer with preferences link, AND a plain-text fallback.
+
+L17 — EMAIL RETRY: WRONG BACKOFF TIMING (PRD Section 5.5)
+    PRD requires exponential backoff: 30s, 2min, 10min. Code uses flat
+    5-second delay between retries.
+
+L18 — EMAIL: NO SEND ATTEMPT LOGGING (PRD Section 5.5)
+    "All send attempts — both successful and failed — must be logged with
+    timestamp and outcome." Sends are only written to ILogger, not
+    persisted to a database table for audit.
+
+L19 — EMAIL: FROM ADDRESS NOT CONFIGURABLE (PRD Section 5.4)
+    The From address is hardcoded from Smtp:Username config. PRD says
+    the sending address must be configurable via Admin settings
+    (SupportEmailAddress field exists but is not used by EmailWorker).
+
+L20 — CATEGORY ENTITY MISSING DESCRIPTION FIELD (PRD Section 14.3)
+    "Admin can add new ticket categories with a name and optional
+    description." Category entity has only Name — no Description field.
+
+L21 — CATEGORY RESPONSE DTO MISSING IsActive (PRD Section 14.3)
+    CategoryResponseDto returns only Id and Name. Frontend needs IsActive
+    to show/hide deactivated categories.
+
+L22 — KB ARTICLE: AUTHOR / LAST UPDATED BY MISSING (PRD Section 9.3)
+    KbArticle entity has no AuthorUserId or LastUpdatedByUserId fields.
+    PRD requires "Author: User who created the article" and "Last Updated
+    By: Most recent editor" as system-recorded fields.
+
+L23 — KB ARTICLE: AGENTS CAN ONLY CREATE DRAFTS, CANNOT PUBLISH (PRD 9.4)
+    UpdateArticleAsync allows setting dto.Status = Published for any
+    authorized user (Admin or SupportAgent). PRD says Agents can only
+    create Drafts and submit for Admin review. Only Admin can publish.
+
+L24 — KB ARTICLE: AGENTS CAN ONLY EDIT THEIR OWN DRAFTS (PRD 9.4)
+    UpdateArticleAsync has no check that a SupportAgent is editing
+    only their own Draft article. Any Agent can edit any article.
+
+L25 — KB FEEDBACK: NO PER-USER DEDUPLICATION
+    SubmitFeedbackAsync (helpful/not helpful) increments counters but does
+    not track which user submitted feedback. A user could spam
+    thumbs-up/down repeatedly.
+
+L26 — RECURRING TICKET WORKER: HARDCODED PRIORITY & SLA
+    RecurringTicketWorker hardcodes Priority = Medium and SlaDeadline =
+    UtcNow.AddDays(2). PRD 12.2 says Priority is a template field.
+    SLA should be calculated using the SlaCalculatorService.
+
+L27 — RECURRING TICKET WORKER: NO ISACTIVE CHECK
+    Worker queries: rt.NextRunDate <= UtcNow but does not filter by
+    IsActive. Paused/deleted templates will still fire.
+
+L28 — AUDIT LOG: MISSING PRD 8.3 FIELDS
+    AuditLog entity uses TableName + Action but the PRD requires:
+      - ActorName (full name at time of action) — stored via FK only
+      - ActorEmail — MISSING
+      - ActorRole (role at time of action) — MISSING
+    These must be snapshot values, not FK lookups, because a user's
+    name/role can change after the audit event.
+
+L29 — AUDIT LOG: MISSING EVENT COVERAGE (PRD Section 8.2)
+    The AuditInterceptor logs EF entity changes automatically, but many
+    PRD-required events are NOT captured:
+      - User login success/failure (with IP) — NOT LOGGED
+      - User logout — NOT LOGGED
+      - Password changed/reset — NOT LOGGED
+      - Report generated/exported — NOT LOGGED
+      - Satisfaction survey submitted — NOT LOGGED
+    These are application-level events that the interceptor cannot capture.
+
+L30 — AUDIT LOG GET: NO FILTERS (PRD Section 8.3)
+    "Admin can view the audit log with filters: date range, actor, action
+    type, entity type." GetRecentLogs returns the top 100 with no filters.
+
+L31 — AUDIT LOG: 12-MONTH RETENTION NOT ENFORCED (PRD Section 8.3)
+    No purge or archival mechanism for logs older than 12 months.
+
+L32 — DEPARTMENT: NO UNIQUENESS CHECK ON NAME (PRD Section 13.2)
+    "Each department must have: Name (unique, max 100 chars)."
+    CreateAsync and UpdateAsync do not check for duplicate department names.
+
+L33 — COMMENT: NO OWNERSHIP ENFORCEMENT (PRD Section 2)
+    PRD: Regular Users can comment on own tickets only, Agents on assigned
+    tickets only. AddCommentAsync does not verify ticket ownership. Any
+    authenticated user can comment on any ticket.
+
+L34 — SLA FIRST RESPONSE TIME NOT TRACKED (PRD Section 6.2 / Glossary)
+    SlaConfig has FirstResponseHours but nothing tracks whether the first
+    response was made within the target. No FirstRespondedAt field on Ticket.
+
+
+### 🔵 SECURITY & ARCHITECTURE GAPS
+================================================================================
+
+S01 — CATEGORY CONTROLLER: GET ALL IS UNAUTHENTICATED
+    CategoryController has no [Authorize] at the class level. GetAllCategories
+    is completely open to anonymous access. While categories may be public
+    data, this should be a conscious decision, not an oversight.
+
+S02 — DASHBOARD CONTROLLER: NO ROLE-BASED RESTRICTION
+    DashboardController has [Authorize] but no role restriction. The service
+    layer does role-based filtering, but PRD Section 2 says Regular Users
+    have NO access to reports/dashboard. A RegularUser can hit the
+    dashboard endpoint and get their own stats — PRD says "No" for
+    "View reports / dashboard" for Regular Users.
+
+S03 — DASHBOARD EXPORT: NO ROLE RESTRICTION
+    ExportUrgentTickets has no [Authorize(Roles)] at all. Any authenticated
+    user can export. Should be Admin only, or at minimum Admin + Agent.
+
+S04 — KB ARTICLES GET BY ID: DRAFT VISIBILITY TO REGULAR USERS (PRD 9.4)
+    GetById returns any article regardless of status. "Draft articles are
+    never visible to Regular Users under any circumstances." The endpoint
+    does not check the caller's role and the article's status.
+
+S05 — KB SEARCH: MAY RETURN DRAFTS FOR NON-ADMIN
+    SearchArticlesAsync filters by Published status — this is CORRECT.
+    But GetArticleByIdAsync does not filter — a user who guesses the ID
+    of a Draft article can read it.
+
+S06 — ESCALATION: AGENT CAN ONLY ESCALATE ASSIGNED TICKETS (PRD 10.2)
+    "A Support Agent can escalate any ticket assigned to them."
+    EscalateTicketAsync does not verify that the calling agent is
+    assigned to the ticket. Any Agent can escalate any ticket.
+
+S07 — AUDIT INTERCEPTOR: NO PROTECTION AGAINST DIRECT SQL
+    The AuditInterceptor throws on EF modify/delete of audit records,
+    but there is no database-level trigger or constraint preventing
+    direct SQL UPDATE/DELETE on AuditLogs/AuditDetails tables. While
+    this is adequate for ORM-level protection, the PRD says "append-only
+    at the database level." Consider adding a database trigger or
+    removing DELETE permission from the application's SQL login.
+
+S08 — AUDIT LOG EXPORT CSV: MISSING ACTOR ROLE AND ACTOR EMAIL
+    ExportLogsToCsvAsync outputs Timestamp, ActorName, Action, EntityType,
+    EntityId, IpAddress, Changes — but omits ActorEmail and ActorRole
+    which are PRD 8.3 required fields.
+
+S09 — TICKET GET ALL: NO DEPARTMENT HEAD VIEW
+    GetTicketsAsync only handles Admin/SupportAgent/RegularUser. It does
+    not handle the Department Head's view-only access to their department's
+    tickets (PRD 13.4).
+
+S10 — BULK IMPORT: PROCESSES ROWS ONE-AT-A-TIME
+    PRD 14.6: "The system must validate each row before creating any
+    accounts — all errors must be listed before import proceeds." The
+    current code creates accounts row by row. If row 5 has an error, rows
+    1-4 are already created. PRD requires validate-all-first, then
+    create-all-or-none.
+
+S11 — BULK IMPORT: HARDCODED TEMP PASSWORD
+    All imported users get "TempPassword123!" — PRD says the welcome email
+    should include a "temporary password." Each user should get a unique
+    random password.
+
+S12 — JWT CLAIMS: DEPARTMENT ID NOT INCLUDED
+    The JWT token does not include the user's DepartmentId. Department Head
+    logic and department-based filtering will require either a claim or
+    a DB lookup on every request.
+
+S13 — RECURRING TICKETS REPOSITORY: NO DEDICATED REPOSITORY
+    RecurringTicket has no IRecurringTicketRepository. The UnitOfWork
+    does not expose a GenericRepository<RecurringTicket> (it's in DbSet
+    but not in UnitOfWork). The worker bypasses UnitOfWork and uses
+    DbContext directly, which breaks the architectural pattern.
+
+
+### 🟢 READY FOR FRONTEND (Features that are 100% correct per PRD)
+================================================================================
+
+G01 — TICKET CRUD (Core v1.0)
+    Create, GetAll, GetById with role-based filtering works correctly.
+    SLA deadline is calculated on creation using the SlaCalculatorService.
+
+G02 — SLA CALCULATOR ENGINE (PRD Section 6.2)
+    CalculateDeadlineAsync correctly handles business hours, weekends,
+    and public holidays. The loop logic for multi-day spill-over is sound.
+
+G03 — SLA CONFIG SEED DATA (PRD Section 6.2)
+    Default SLA targets for Critical/High/Medium/Low are correctly seeded.
+
+G04 — SLA CONFIG CRUD (PRD Section 6.4)
+    GetAllConfigs and UpdateConfig endpoints work correctly. Priority
+    enum is protected from mutation.
+
+G05 — ESCALATION: MANUAL ESCALATE + ACKNOWLEDGE (PRD Section 10)
+    EscalateTicketAsync correctly: bumps priority, sets flag, records
+    reason and timestamp, recalculates SLA. AcknowledgeEscalationAsync
+    correctly records timestamp without clearing the flag.
+
+G06 — AUTO-ESCALATION: SLA BREACH (PRD Section 10.4 — partial)
+    AutoEscalationWorker correctly finds breached unescalated tickets,
+    sets the flag, bumps priority, labels as "System Auto-Escalation."
+
+G07 — AUDIT INTERCEPTOR (PRD Section 8 — core mechanism)
+    The SaveChangesInterceptor correctly: logs Added/Modified entities,
+    captures old/new values, records IP address, prevents modify/delete
+    of audit records with an exception.
+
+G08 — AUDIT LOG VIEW + CSV EXPORT (PRD Section 8.3 — partial)
+    GetRecentLogs and ExportCsv endpoints exist and work. Admin-only
+    authorization is correctly applied.
+
+G09 — KNOWLEDGE BASE: CORE CRUD (PRD Section 9 — partial)
+    Create (with version), Update (with version bump + snapshot), search
+    with relevance scoring, view count increment, helpful/not-helpful
+    feedback all work correctly.
+
+G10 — CSAT FEEDBACK: CORE FLOW (PRD Section 11 — partial)
+    SubmitTicketFeedbackAsync correctly: validates ownership, checks
+    Closed/Resolved status, prevents duplicate submissions.
+
+G11 — DEPARTMENT MANAGEMENT (PRD Section 13 — partial)
+    Create, Update, Deactivate with rules: General cannot be deactivated
+    or renamed, cannot deactivate department with active users.
+
+G12 — SYSTEM SETTINGS CRUD (PRD Section 14.2 — partial)
+    Get and Update for SystemName, SupportEmailAddress, BusinessHours,
+    WorkingDays all work correctly.
+
+G13 — BULK USER IMPORT (PRD Section 14.6 — partial)
+    CSV upload, header validation, duplicate skip, role validation,
+    department mapping, welcome email — core flow works.
+
+G14 — USER MANAGEMENT: CRUD (PRD Section 2)
+    Create, GetAll, GetById, Deactivate, UpdateRole — all Admin-only
+    endpoints correctly secured.
+
+G15 — EMAIL QUEUE ARCHITECTURE (PRD Section 5.5 — partial)
+    Async Channel-based queue with singleton registration and background
+    worker correctly decouples email sending from API responses.
+
+G16 — GENERAL DEPARTMENT SEED (PRD Section 13.2)
+    "General" department is seeded with Id=1 and protected from
+    deactivation/rename. All users default to DepartmentId=1.
+
+G17 — TICKET ASSIGN (PRD Section 2)
+    Admin-only, correctly updates AssignedToUserId and sets InProgress.
+
+G18 — AUTHENTICATION & JWT
+    Login with email/password, role-based JWT, deactivated user check —
+    all working correctly.
+
+
+### 📊 SUMMARY SCORECARD
+================================================================================
+
+  Category                        | Count
+  --------------------------------|-------
+  🔴 CRITICAL GAPS                |   20
+  🟡 LOGIC & EDGE CASE GAPS       |   34
+  🔵 SECURITY & ARCHITECTURE GAPS |   13
+  🟢 READY FOR FRONTEND           |   18
+
+  ESTIMATED BACKEND COMPLETION: ~45%
+
+  The core CRUD operations and foundational architecture (SLA calculator,
+  audit interceptor, email queue, escalation) are solid. However, the PRD
+  v2.0 additions (Reporting, Notifications, Recurring Templates, KB
+  advanced features, Data Archival, Admin Configuration) are either
+  entirely missing or critically incomplete.
+
+  RECOMMENDATION: Do NOT start the Angular frontend until at minimum
+  all 🔴 CRITICAL and 🔵 SECURITY gaps are resolved. The 🟡 LOGIC gaps
+  can be addressed iteratively but will cause rework if the frontend is
+  built against the current incomplete API surface.
+
+
+================================================================================
+                            END OF AUDIT REPORT
+================================================================================

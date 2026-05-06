@@ -25,6 +25,12 @@ namespace HelpDesk.Core.Entities
         [Required]
         public string WorkingDays { get; set; } = "Monday,Tuesday,Wednesday,Thursday,Friday";
 
-       
+        public string? CompanyLogoUrl { get; set; }
+
+        public string DefaultTimeZone { get; set; } = "UTC";
+
+        [Range(15, 480)] // PRD: Configurable between 15 mins and 8 hours (480 mins)
+        public int SessionTimeoutMinutes { get; set; } = 60;
+
     }
 }

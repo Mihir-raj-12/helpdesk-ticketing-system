@@ -27,17 +27,36 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 
         public async Task<ApiResponse<KbArticleResponseDto>> GetArticleByIdAsync(int id)
         {
+            var currentUserId = _currentUserProvider.GetCurrentUserId();
+            var currentUserRole = _currentUserProvider.GetCurrentUserRole();
+
             var article = await _unitOfWork.KbArticles.GetByIdAsync(id);
             if (article == null) return ApiResponse<KbArticleResponseDto>.Failure("Article not found.");
 
+            // --- FIX 4 (S04): Hide Drafts from Regular Users ---
+            if (article.Status == KbArticleStatus.Draft)
+            {
+                if (currentUserRole == "RegularUser")
+                {
+                    return ApiResponse<KbArticleResponseDto>.Failure("Article not found or you do not have permission to view it.");
+                }
 
-            article.ViewCount += 1;
-            await _unitOfWork.KbArticles.UpdateAsync(article);
-            await _unitOfWork.SaveChangesAsync();
-            // Optionally, you might want to load the Category name here using a custom repository method later,
-            // but for now AutoMapper will handle the basic mapping.
-            var responseDto = _mapper.Map<KbArticleResponseDto>(article);
-            return ApiResponse<KbArticleResponseDto>.Success(responseDto);
+                // Hide from Support Agents if it's not their draft
+                if (currentUserRole == "SupportAgent" && article.AuthorUserId != currentUserId)
+                {
+                    return ApiResponse<KbArticleResponseDto>.Failure("You can only view your own draft articles.");
+                }
+            }
+
+            // Only increment view count if a Regular User is viewing it
+            if (currentUserRole == "RegularUser")
+            {
+                article.ViewCount += 1;
+                await _unitOfWork.KbArticles.UpdateAsync(article, a => a.ViewCount);
+                await _unitOfWork.SaveChangesAsync();
+            }
+
+            return ApiResponse<KbArticleResponseDto>.Success(_mapper.Map<KbArticleResponseDto>(article));
         }
 
         public async Task<ApiResponse<IEnumerable<KbArticleResponseDto>>> GetAllPublishedAsync()
@@ -52,74 +71,97 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
         public async Task<ApiResponse<KbArticleResponseDto>> CreateArticleAsync(CreateKbArticleDto dto)
         {
             var currentUserId = _currentUserProvider.GetCurrentUserId();
+            var currentUserRole = _currentUserProvider.GetCurrentUserRole();
+
             if (string.IsNullOrEmpty(currentUserId))
                 return ApiResponse<KbArticleResponseDto>.Failure("User not found or unauthorized.");
 
             var article = _mapper.Map<KbArticle>(dto);
 
             // PRD 9.4: Support Agents create new articles in Draft status.
-            article.Status = KbArticleStatus.Draft;
-            article.VersionNumber = 1;
-
-            await _unitOfWork.KbArticles.AddAsync(article);
-            await _unitOfWork.SaveChangesAsync(); // Save to get the new Article ID
-
-            // PRD 9.5: Every save creates a new version entry.
-            var initialVersion = new KbArticleVersion
+            // --- FIX 1 (L23): Force Support Agents to Draft Status ---
+            if (currentUserRole == "SupportAgent")
             {
-                KbArticleId = article.Id,
-                TitleSnapshot = article.Title,
-                ContentSnapshot = article.Content,
-                VersionNumber = article.VersionNumber,
-                SavedByUserId = currentUserId
-            };
+                article.Status = KbArticleStatus.Draft; // Agents cannot publish directly!
+            }
+            else
+            {
+                article.Status = dto.Status; // Admins can choose Published or Draft
+            }
 
-            await _unitOfWork.KbArticleVersions.AddAsync(initialVersion);
+            // --- FIX 2 (L22): Track Authorship ---
+            article.AuthorUserId = currentUserId;
+            article.LastUpdatedByUserId = currentUserId;
+            article.CreatedDate = DateTime.UtcNow;
+            article.LastUpdatedDate = DateTime.UtcNow;
+            var createdArticle = await _unitOfWork.KbArticles.AddAsync(article);
+
+            // Create the initial Version history record
+            var version = new KbArticleVersion
+            {
+                KbArticleId = createdArticle.Id,
+                Title = createdArticle.Title,
+                Content = createdArticle.Content,
+                VersionNumber = 1,
+                UpdatedByUserId = currentUserId,
+                UpdatedDate = DateTime.UtcNow
+            };
+            await _unitOfWork.KbArticleVersions.AddAsync(version);
             await _unitOfWork.SaveChangesAsync();
 
-            var responseDto = _mapper.Map<KbArticleResponseDto>(article);
-            return ApiResponse<KbArticleResponseDto>.Success(responseDto, "Draft article created successfully.");
+            return ApiResponse<KbArticleResponseDto>.Success(_mapper.Map<KbArticleResponseDto>(createdArticle), "Article created successfully");
         }
 
         public async Task<ApiResponse<KbArticleResponseDto>> UpdateArticleAsync(int id, UpdateKbArticleDto dto)
         {
-
             var currentUserId = _currentUserProvider.GetCurrentUserId();
-            if (string.IsNullOrEmpty(currentUserId))
-                return ApiResponse<KbArticleResponseDto>.Failure("User not found or unauthorized.");
+            var currentUserRole = _currentUserProvider.GetCurrentUserRole();
 
-            var existingArticle = await _unitOfWork.KbArticles.GetByIdAsync(id);
-            if (existingArticle == null) return ApiResponse<KbArticleResponseDto>.Failure("Article not found.");
+            var article = await _unitOfWork.KbArticles.GetByIdAsync(id);
+            if (article == null) return ApiResponse<KbArticleResponseDto>.Failure("Article not found.");
 
-            // --- THE VERSION ENGINE ---
-
-            // 1. Take a snapshot of the CURRENT state before making any changes
-            var snapshot = new KbArticleVersion
+            // --- FIX 3 (L24): Prevent Agents from editing other's drafts or publishing ---
+            if (currentUserRole == "SupportAgent")
             {
-                KbArticleId = existingArticle.Id,
-                TitleSnapshot = existingArticle.Title,
-                ContentSnapshot = existingArticle.Content,
-                VersionNumber = existingArticle.VersionNumber,
-                SavedByUserId = currentUserId
+                if (article.AuthorUserId != currentUserId)
+                    return ApiResponse<KbArticleResponseDto>.Failure("You can only edit your own draft articles.");
+
+                if (dto.Status == KbArticleStatus.Published)
+                    return ApiResponse<KbArticleResponseDto>.Failure("Support Agents cannot publish articles. Please save as Draft for Admin review.");
+            }
+
+            // Update fields
+            article.Title = dto.Title;
+            article.Content = dto.Content;
+            article.CategoryId = dto.CategoryId;
+
+            // Admin can publish it, Agent stays draft
+            if (currentUserRole == "Admin" )
+            {
+                article.Status = dto.Status;
+            }
+
+            article.LastUpdatedByUserId = currentUserId; // Track who did this update
+
+            // Create a new Version snapshot
+            var currentVersions = await _unitOfWork.KbArticleVersions.FindAsync(v => v.KbArticleId == id);
+            int nextVersionNumber = currentVersions.Any() ? currentVersions.Max(v => v.VersionNumber) + 1 : 1;
+
+            var version = new KbArticleVersion
+            {
+                KbArticleId = article.Id,
+                Title = article.Title,
+                Content = article.Content,
+                VersionNumber = nextVersionNumber,
+                UpdatedByUserId = currentUserId,
+                UpdatedDate = DateTime.UtcNow
             };
-            await _unitOfWork.KbArticleVersions.AddAsync(snapshot);
 
-            // 2. Apply the new updates to the main article
-            existingArticle.Title = dto.Title;
-            existingArticle.Content = dto.Content;
-            existingArticle.CategoryId = dto.CategoryId;
-            existingArticle.Tags = dto.Tags;
-            existingArticle.Status = dto.Status; // Allows Admin to publish
-
-            // 3. Bump the version number!
-            existingArticle.VersionNumber += 1;
-
-            // 4. Save everything together in one transaction
-            await _unitOfWork.KbArticles.UpdateAsync(existingArticle);
+            await _unitOfWork.KbArticleVersions.AddAsync(version);
+            await _unitOfWork.KbArticles.UpdateAsync(article);
             await _unitOfWork.SaveChangesAsync();
 
-            var responseDto = _mapper.Map<KbArticleResponseDto>(existingArticle);
-            return ApiResponse<KbArticleResponseDto>.Success(responseDto, $"Article updated to Version {existingArticle.VersionNumber}.");
+            return ApiResponse<KbArticleResponseDto>.Success(_mapper.Map<KbArticleResponseDto>(article), "Article updated successfully.");
         }
 
         public async Task<ApiResponse<bool>> SubmitFeedbackAsync(int id, bool isHelpful)

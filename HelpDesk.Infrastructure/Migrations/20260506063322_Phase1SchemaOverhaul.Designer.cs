@@ -4,6 +4,7 @@ using HelpDesk.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HelpDesk.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260506063322_Phase1SchemaOverhaul")]
+    partial class Phase1SchemaOverhaul
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -319,11 +322,6 @@ namespace HelpDesk.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AuthorUserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
@@ -339,11 +337,6 @@ namespace HelpDesk.Infrastructure.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
-
-                    b.Property<string>("LastUpdatedByUserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("LastUpdatedDate")
                         .HasColumnType("datetime2");
@@ -371,11 +364,7 @@ namespace HelpDesk.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AuthorUserId");
-
                     b.HasIndex("CategoryId");
-
-                    b.HasIndex("LastUpdatedByUserId");
 
                     b.ToTable("KbArticles");
                 });
@@ -388,7 +377,7 @@ namespace HelpDesk.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Content")
+                    b.Property<string>("ContentSnapshot")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -404,17 +393,13 @@ namespace HelpDesk.Infrastructure.Migrations
                     b.Property<DateTime>("LastUpdatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Title")
+                    b.Property<string>("SavedByUserId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UpdatedByUserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime>("UpdatedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("TitleSnapshot")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("VersionNumber")
                         .HasColumnType("int");
@@ -423,7 +408,7 @@ namespace HelpDesk.Infrastructure.Migrations
 
                     b.HasIndex("KbArticleId");
 
-                    b.HasIndex("UpdatedByUserId");
+                    b.HasIndex("SavedByUserId");
 
                     b.ToTable("KbArticleVersions");
                 });
@@ -1053,29 +1038,13 @@ namespace HelpDesk.Infrastructure.Migrations
 
             modelBuilder.Entity("HelpDesk.Core.Entities.KbArticle", b =>
                 {
-                    b.HasOne("HelpDesk.Core.Entities.ApplicationUser", "AuthorUser")
-                        .WithMany()
-                        .HasForeignKey("AuthorUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("HelpDesk.Core.Entities.Category", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HelpDesk.Core.Entities.ApplicationUser", "LastUpdatedByUser")
-                        .WithMany()
-                        .HasForeignKey("LastUpdatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("AuthorUser");
-
                     b.Navigation("Category");
-
-                    b.Navigation("LastUpdatedByUser");
                 });
 
             modelBuilder.Entity("HelpDesk.Core.Entities.KbArticleVersion", b =>
@@ -1086,15 +1055,15 @@ namespace HelpDesk.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("HelpDesk.Core.Entities.ApplicationUser", "UpdatedByUser")
+                    b.HasOne("HelpDesk.Core.Entities.ApplicationUser", "SavedByUser")
                         .WithMany()
-                        .HasForeignKey("UpdatedByUserId")
+                        .HasForeignKey("SavedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("KbArticle");
 
-                    b.Navigation("UpdatedByUser");
+                    b.Navigation("SavedByUser");
                 });
 
             modelBuilder.Entity("HelpDesk.Core.Entities.NotificationPreference", b =>

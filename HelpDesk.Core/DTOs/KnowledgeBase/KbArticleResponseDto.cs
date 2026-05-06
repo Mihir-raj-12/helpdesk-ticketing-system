@@ -13,7 +13,7 @@ namespace HelpDesk.Core.DTOs.KnowledgeBase
         public string Title { get; set; } = string.Empty;
 
         public int CategoryId { get; set; }
-        public string CategoryName { get; set; } = string.Empty; // Flattens the relationship for the UI
+        public string CategoryName { get; set; } = string.Empty;
 
         public string Content { get; set; } = string.Empty;
         public string? Tags { get; set; }
@@ -27,5 +27,9 @@ namespace HelpDesk.Core.DTOs.KnowledgeBase
 
         public DateTime CreatedDate { get; set; }
         public DateTime LastUpdatedDate { get; set; }
+
+        // --- NEW: Security/UI Helpers ---
+        public string AuthorUserId { get; set; } = string.Empty;
+        public string LastUpdatedByUserId { get; set; } = string.Empty;
     }
 }

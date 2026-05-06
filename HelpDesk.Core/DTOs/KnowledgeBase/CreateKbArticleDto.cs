@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HelpDesk.Core.Enums;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -21,5 +22,8 @@ namespace HelpDesk.Core.DTOs.KnowledgeBase
 
         [MaxLength(500)]
         public string? Tags { get; set; }
+
+        // NEW: Admins can pass this in. (Agents will be forced to Draft by the service anyway!)
+        public KbArticleStatus Status { get; set; } = KbArticleStatus.Draft;
     }
 }
