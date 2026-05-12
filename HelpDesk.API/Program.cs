@@ -126,6 +126,8 @@ builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<ISlaCalculatorService, SlaCalculatorService>();
 builder.Services.AddScoped<ISlaConfigService, SlaConfigService>();
 builder.Services.AddScoped<IKbArticleService, KbArticleService>();
+builder.Services.AddScoped<IPublicHolidayService, PublicHolidayService>();
+builder.Services.AddScoped<INotificationPreferenceService, NotificationPreferenceService>();
 // Register the background worker
 builder.Services.AddHostedService<AutoEscalationWorker>();
 builder.Services.AddHostedService<RecurringTicketWorker>();

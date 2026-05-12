@@ -31,6 +31,9 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 
         public IGenericRepository<TicketFeedback> TicketFeedbacks { get; private set; }
 
+        // --- NEW: Added NotificationPreferences ---
+        public IGenericRepository<NotificationPreference> NotificationPreferences { get; private set; }
+
         public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
@@ -46,6 +49,9 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             KbArticles = new GenericRepository<KbArticle>(_context);
             KbArticleVersions = new GenericRepository<KbArticleVersion>(_context);
             TicketFeedbacks = new GenericRepository<TicketFeedback>(_context);
+
+            // --- NEW: Initialized NotificationPreferences ---
+            NotificationPreferences = new GenericRepository<NotificationPreference>(_context);
         }
 
         public async Task<int> SaveChangesAsync()
@@ -57,7 +63,5 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
         {
             _context.Dispose();
         }
-
-       
     }
 }

@@ -37,7 +37,7 @@ namespace HelpDesk.Infrastructure.Data
 
         public DbSet<RecurringTicket> RecurringTickets { get; set; }
 
-        DbSet<NotificationPreference> NotificationPreferences { get; set; }
+        public DbSet<NotificationPreference> NotificationPreferences { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

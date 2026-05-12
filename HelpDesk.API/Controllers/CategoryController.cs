@@ -9,6 +9,7 @@ namespace HelpDesk.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CategoryController : ControllerBase
     {
         private readonly ICategoryService _categoryService;
@@ -28,12 +29,12 @@ namespace HelpDesk.API.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<ApiResponse<CategoryResponseDto>>> CreateCategory([FromBody] CreateCategoryDto dto) 
+        public async Task<ActionResult<ApiResponse<CategoryResponseDto>>> CreateCategory([FromBody] CreateCategoryDto dto)
         {
 
             var result = await _categoryService.CreateAsync(dto);
 
-            if(!result.IsSuccess)
+            if (!result.IsSuccess)
             {
                 return BadRequest(result);
             }
@@ -57,21 +58,17 @@ namespace HelpDesk.API.Controllers
         }
 
 
-        [HttpPut("DeactivateCategory")]
+        [HttpPut("{id}/deactivate")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<ApiResponse<bool>>> DeactivateCategory([FromBody] int id)
+        public async Task<ActionResult<ApiResponse<bool>>> DeactivateCategory(int id)
         {
             var response = await _categoryService.DeactivateAsync(id);
-
-            if (!response.IsSuccess)
-            {
-                return BadRequest(response);
-            }
+            if (!response.IsSuccess) return BadRequest(response);
 
             return Ok(response);
         }
 
-
+    
 
     }
 }

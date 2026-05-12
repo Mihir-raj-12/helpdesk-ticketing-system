@@ -43,43 +43,39 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 
             var ticket = _mapper.Map<Ticket>(dto);
             ticket.Status = TicketStatus.Open;
-
             ticket.RaisedByUserId = !string.IsNullOrEmpty(dto.RaisedForUserId) ? dto.RaisedForUserId : currentUserId;
 
-            // --- NEW: SLA DEADLINE CALCULATION ---
+            // 1. Ask Identity for the user's full profile to get their Department
+            var raisedByUser = await _userManager.FindByIdAsync(ticket.RaisedByUserId);
 
-            // 1. Get all SLA configurations from the database
+            // --- THE FIX: Assign the Department ID ---
+            // If the user somehow doesn't have a department, fallback to '1' (General)
+            ticket.DepartmentId = raisedByUser?.DepartmentId ?? 1;
+
+            // --- SLA DEADLINE CALCULATION ---
             var slaConfigs = await _unitOfWork.SlaConfigs.GetAllAsync();
-
-            // 2. Find the specific rule for this ticket's priority
             var config = slaConfigs.FirstOrDefault(c => c.Priority == ticket.Priority);
 
             if (config != null)
             {
-                // 3. Run the math engine to find out exactly when this ticket breaches!
                 ticket.SlaDeadline = await _slaCalculator.CalculateDeadlineAsync(DateTime.UtcNow, config.ResolutionHours);
             }
             else
             {
-                // Fallback safety net (just in case the SlaConfig table is empty)
                 ticket.SlaDeadline = DateTime.UtcNow.AddHours(24);
             }
 
-            // 1. Ask Identity for the user's full profile using the ID
-            var raisedByUser = await _userManager.FindByIdAsync(ticket.RaisedByUserId);
-
-            // 2. Safety check: Fallback to an admin email just in case the user has no email registered
             var targetEmail = raisedByUser?.Email ?? "admin@helpdesk.com";
 
             await _unitOfWork.Tickets.AddAsync(ticket);
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync(); // This will succeed now!
 
             var frontendUrl = _config["FrontendUrl"];
             var ticketUrl = $"{frontendUrl}/tickets/details/{ticket.Id}";
 
             var emailPayload = new EmailPayload
             {
-                To = targetEmail, // Or your friend's email
+                To = targetEmail,
                 Subject = $"New Ticket Created: {ticket.Title}",
                 Body = $"Hello,\n\nA new ticket (ID: {ticket.Id}) was just raised on your behalf.\n\nThank you,\nHelpDesk Team"
             };

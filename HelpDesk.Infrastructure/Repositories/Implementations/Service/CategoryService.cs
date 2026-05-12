@@ -33,5 +33,23 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
 
             return ApiResponse<bool>.Success(true, "Category Updated Successfully");
         }
+
+        public override async Task<ApiResponse<bool>> DeactivateAsync(int id)
+        {
+            // PRD 14.3: Prevent deactivation if there are active tickets
+            // Check if any tickets use this category AND are not Closed/Resolved
+            var activeTickets = await _unitOfWork.Tickets.FindAsync(t =>
+                t.CategoryId == id &&
+                t.Status != Core.Enums.TicketStatus.Closed &&
+                t.Status != Core.Enums.TicketStatus.Resolved);
+
+            if (activeTickets.Any())
+            {
+                return ApiResponse<bool>.Failure($"Cannot deactivate this category. There are {activeTickets.Count()} active tickets currently using it.");
+            }
+
+            // If safe, let the generic service handle the soft delete!
+            return await base.DeactivateAsync(id);
+        }
     }
 }

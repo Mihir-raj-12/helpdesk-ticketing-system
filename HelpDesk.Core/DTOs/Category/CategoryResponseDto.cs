@@ -10,5 +10,7 @@ namespace HelpDesk.Core.DTOs.Category
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
+        public string? Description { get; set; } // Just in case you added this!
+        public bool IsActive { get; set; }
     }
 }

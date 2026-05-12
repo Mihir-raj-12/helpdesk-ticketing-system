@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HelpDesk.Core.DTOs.Holidays;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace HelpDesk.Core.Interfaces
 {
-    internal interface IPublicHolidayService
+    public interface IPublicHolidayService : IGenericService<PublicHolidayResponseDto>
     {
     }
 }
