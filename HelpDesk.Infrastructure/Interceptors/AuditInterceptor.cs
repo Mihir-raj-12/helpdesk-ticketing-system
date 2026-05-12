@@ -29,9 +29,26 @@ namespace HelpDesk.Infrastructure.Interceptors
 
             var userId = _currentUserProvider.GetCurrentUserId();
             var ipAddress = _currentUserProvider.GetClientIpAddress() ?? "System/Unknown";
+            var userRole = _currentUserProvider.GetCurrentUserRole() ?? "System";
+            // --- FIX 1 (L28): Get actual snapshot details ---
+            string actorName = "System";
+            string actorEmail = "system@system.com";
+
+            if (!string.IsNullOrEmpty(userId))
+            {
+                // Check local cache first, then database
+                var user = context.Set<ApplicationUser>().Local.FirstOrDefault(u => u.Id == userId)
+                           ?? context.Set<ApplicationUser>().FirstOrDefault(u => u.Id == userId);
+
+                if (user != null)
+                {
+                    actorName = user.FullName;
+                    actorEmail = user.Email ?? "Unknown";
+                }
+            }
+
             var auditEntries = new List<AuditLog>();
 
-            // Look at everything EF Core is about to save
             var entries = context.ChangeTracker.Entries()
                 .Where(e => e.Entity is BaseEntity &&
                             e.State != EntityState.Detached &&
@@ -65,6 +82,10 @@ namespace HelpDesk.Infrastructure.Interceptors
                     IpAddress = ipAddress,  // NEW
                     Action = action,
                     PerformedByUserId = userId,
+                    // --- NEW SNAPSHOT FIELDS ---
+                    ActorName = actorName,
+                    ActorEmail = actorEmail,
+                    ActorRole = userRole,
                     PerformedAt = DateTime.UtcNow,
                     CreatedDate = DateTime.UtcNow,
                     LastUpdatedDate = DateTime.UtcNow,

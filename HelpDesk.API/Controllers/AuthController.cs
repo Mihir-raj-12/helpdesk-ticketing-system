@@ -29,5 +29,13 @@ namespace HelpDesk.API.Controllers
 
             return Ok(response);
         }
+
+        [HttpPost("logout")]
+        [Microsoft.AspNetCore.Authorization.Authorize] 
+        public async Task<ActionResult<ApiResponse<bool>>> Logout()
+        {
+            var response = await _authService.LogoutAsync();
+            return Ok(response);
+        }
     }
 }

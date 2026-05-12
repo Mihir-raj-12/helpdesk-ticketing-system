@@ -31,11 +31,15 @@ namespace HelpDesk.API.Controllers
         [HttpGet("export")]
         public async Task<IActionResult> ExportCsv([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
         {
+            // Force the endDate to include the entire day (up to 23:59:59)
+            // This prevents the "Midnight Trap" where logs from later in the afternoon get excluded!
+            var actualEndDate = endDate.Date.AddDays(1).AddTicks(-1);
+
             // Basic validation
-            if (startDate > endDate)
+            if (startDate > actualEndDate)
                 return BadRequest("Start date cannot be after end date.");
 
-            var fileBytes = await _auditLogService.ExportLogsToCsvAsync(startDate, endDate);
+            var fileBytes = await _auditLogService.ExportLogsToCsvAsync(startDate, actualEndDate);
 
             // Generate a dynamic filename based on the current date
             var fileName = $"AuditLogs_{DateTime.UtcNow:yyyyMMdd}.csv";

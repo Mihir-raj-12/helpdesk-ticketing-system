@@ -12,6 +12,8 @@ namespace HelpDesk.Core.Interfaces
     {
         Task<ApiResponse<LoginResponseDto>> LoginAsync(LoginRequestDto dto);
 
+        Task<ApiResponse<bool>> LogoutAsync();
+
 
     }
 }

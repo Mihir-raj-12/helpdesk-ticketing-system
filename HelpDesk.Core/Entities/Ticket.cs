@@ -69,5 +69,7 @@ namespace HelpDesk.Core.Entities
         public bool? SlaClosedWithinSla { get; set; } // Locked in when closed
 
         public DateTime? ArchivedAt { get; set; } // For the archival background worker
+
+        public DateTime? SlaPausedAt { get; set; } // Tracks when the ticket was put On Hold
     }
 }

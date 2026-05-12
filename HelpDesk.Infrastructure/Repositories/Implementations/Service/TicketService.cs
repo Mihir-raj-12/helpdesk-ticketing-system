@@ -171,11 +171,25 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             var oldStatus = ticket.Status;
 
             ticket.Status = dto.Status;
-
-            // --- FIX 3 (L05): SLA Reset on Reopen ---
-            // PRD 6.3: "Reopening a ticket resets the SLA timer from zero using the ticket's current priority."
-            if (dto.Status == TicketStatus.Reopened)
+            // --- PHASE 3: SMART SLA PAUSING (Gap L03) ---
+            if (dto.Status == TicketStatus.OnHold)
             {
+                // Freeze the timer!
+                ticket.SlaPausedAt = DateTime.UtcNow;
+            }
+            else if (oldStatus == TicketStatus.OnHold && dto.Status == TicketStatus.InProgress)
+            {
+                // Unfreeze the timer and extend the deadline by the paused duration
+                if (ticket.SlaPausedAt.HasValue)
+                {
+                    var pausedDuration = DateTime.UtcNow - ticket.SlaPausedAt.Value;
+                    ticket.SlaDeadline = ticket.SlaDeadline.Add(pausedDuration);
+                    ticket.SlaPausedAt = null;
+                }
+            }
+            else if (dto.Status == TicketStatus.Reopened)
+            {
+                ticket.SlaPausedAt = null; // Clear any old pauses
                 var slaConfigs = await _unitOfWork.SlaConfigs.GetAllAsync();
                 var config = slaConfigs.FirstOrDefault(c => c.Priority == ticket.Priority);
                 if (config != null)
@@ -184,17 +198,7 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
                 }
             }
 
-            await _unitOfWork.Tickets.UpdateAsync(ticket, t => t.Status);
-
-            //await _unitOfWork.AuditLogs.LogAsync(
-            //    tableName: "Tickets",
-            //    action: "UpdateStatus",
-            //    performedByUserId: currentUserId,
-            //    changes: new List<(string, string?, string?)>
-            //    {
-            //        ("Status", oldStatus.ToString(), dto.Status.ToString())
-            //    });
-
+            await _unitOfWork.Tickets.UpdateAsync(ticket);
             await _unitOfWork.SaveChangesAsync();
             return ApiResponse<bool>.Success(true, "Ticket status updated successfully");
         }
@@ -238,34 +242,28 @@ namespace HelpDesk.Infrastructure.Repositories.Implementations.Service
             var currentUserId = _currentUserProvider.GetCurrentUserId();
             if (string.IsNullOrEmpty(currentUserId)) return ApiResponse<bool>.Failure("User not found.");
 
-
             var ticket = await _unitOfWork.Tickets.GetByIdAsync(dto.TicketId);
-            if (ticket == null)
-                return ApiResponse<bool>.Failure("Ticket not found");
+            if (ticket == null) return ApiResponse<bool>.Failure("Ticket not found");
 
-        
             if (!Enum.IsDefined(typeof(TicketPriority), dto.Priority))
                 return ApiResponse<bool>.Failure("Invalid priority value");
 
-            var oldPriority = ticket.Priority;
-
-  
             ticket.Priority = dto.Priority;
 
-            await _unitOfWork.Tickets.UpdateAsync(ticket, t => t.Priority);
+            // --- PHASE 3: SLA RECALCULATION (Gap L04) ---
+            // The Priority changed, so we must calculate a new strict deadline starting from NOW.
+            var slaConfigs = await _unitOfWork.SlaConfigs.GetAllAsync();
+            var config = slaConfigs.FirstOrDefault(c => c.Priority == ticket.Priority);
 
-    
-            //await _unitOfWork.AuditLogs.LogAsync(
-            //    tableName: "Tickets",
-            //    action: "UpdatePriority",
-            //    performedByUserId: currentUserId,
-            //    changes: new List<(string, string?, string?)>
-            //    {
-            //        ("Priority", oldPriority.ToString(), dto.Priority.ToString())
-            //    });
+            if (config != null)
+            {
+                ticket.SlaDeadline = await _slaCalculator.CalculateDeadlineAsync(DateTime.UtcNow, config.ResolutionHours);
+            }
 
+            await _unitOfWork.Tickets.UpdateAsync(ticket);
             await _unitOfWork.SaveChangesAsync();
-            return ApiResponse<bool>.Success(true, "Ticket priority updated successfully");
+
+            return ApiResponse<bool>.Success(true, "Ticket priority and SLA deadline updated successfully");
         }
 
         public async Task<ApiResponse<TicketResponseDto>> EscalateTicketAsync(int ticketId, string reason, string currentUserId)
